@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { QuestionStatusBadge } from "@/components/QuestionStatusBadge"
-import { shuffleArray } from "@/lib/utils"
 import type { QuestionStatus } from "@/lib/scoring"
 
 interface Props {
@@ -68,7 +67,7 @@ export default async function TestReviewPage({ params }: Props) {
   const pct = test.percentage ?? 0
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl">
+    <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/subjects/${test.subject_id}`}>
@@ -117,7 +116,7 @@ export default async function TestReviewPage({ params }: Props) {
           const answer = answerMap.get(tq.question_id)
           const selectedIds: string[] = answer?.selected_option_ids ?? []
           const status = (answer?.status ?? "unanswered") as QuestionStatus
-          const sortedOptions = shuffleArray(q.answer_options ?? [])
+          const sortedOptions = [...(q.answer_options ?? [])].sort((a: any, b: any) => a.position - b.position)
 
           return (
             <Card key={tq.question_id}>

@@ -41,7 +41,7 @@ export function ProfileClient({ email, fullName, role }: Props) {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-md">
+    <div className="p-4 sm:p-6 space-y-6 max-w-md">
       <div>
         <h1 className="text-2xl font-bold">Profile</h1>
         <p className="text-muted-foreground text-sm mt-0.5">{email}</p>

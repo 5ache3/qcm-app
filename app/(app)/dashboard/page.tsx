@@ -28,7 +28,7 @@ export default async function DashboardPage() {
   const firstName = profile?.full_name?.split(" ")[0] ?? "there"
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Hello, {firstName} 👋</h1>
         <p className="text-muted-foreground mt-1">Ready to study? Pick up where you left off.</p>

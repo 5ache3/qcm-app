@@ -41,7 +41,7 @@ export default async function SubjectsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Subjects</h1>
         <p className="text-muted-foreground mt-1">Choose a subject to practice or test yourself.</p>

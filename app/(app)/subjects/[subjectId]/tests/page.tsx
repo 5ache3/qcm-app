@@ -41,7 +41,7 @@ export default async function SubjectTestsPage({ params }: Props) {
     .order("started_at", { ascending: false })
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl">
+    <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/subjects/${subjectId}`}>

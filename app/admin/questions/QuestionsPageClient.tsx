@@ -16,7 +16,7 @@ interface Props {
 
 export function QuestionsPageClient({ subjects }: Props) {
   return (
-    <div className="p-6 space-y-4 max-w-3xl">
+    <div className="p-4 sm:p-6 space-y-4 max-w-3xl">
       <h1 className="text-2xl font-bold">Questions</h1>
       <Tabs defaultValue="manage">
         <TabsList>

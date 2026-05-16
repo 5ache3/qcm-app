@@ -128,7 +128,7 @@ export default async function AdminAnalyticsPage() {
       : null
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-4 sm:p-6 space-y-8">
       <h1 className="text-2xl font-bold">Analytics</h1>
 
       {/* Top-level numbers */}

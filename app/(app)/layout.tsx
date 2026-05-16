@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { AppSidebar } from "@/components/AppSidebar"
+import { MobileNav } from "@/components/MobileNav"
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -16,10 +17,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .eq("id", user.id)
     .single()
 
+  const isAdmin = profile?.role === "admin"
+
   return (
     <div className="flex min-h-screen">
       <AppSidebar user={user} profile={profile} />
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="flex-1 overflow-auto pb-16 md:pb-0">{children}</main>
+      <MobileNav isAdmin={isAdmin} />
     </div>
   )
 }

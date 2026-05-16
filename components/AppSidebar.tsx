@@ -66,7 +66,7 @@ export function AppSidebar({ user, profile }: AppSidebarProps) {
   }
 
   return (
-    <aside className="flex w-60 flex-col border-r bg-card">
+    <aside className="hidden md:flex w-60 flex-col border-r bg-card">
       <div className="flex h-16 items-center gap-3 border-b px-4">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <BookOpen className="h-4 w-4" />

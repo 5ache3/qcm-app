@@ -52,7 +52,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
 
   if (!profiles || profiles.length === 0) {
     return (
-      <div className="p-6 flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+      <div className="p-4 sm:p-6 flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
         <Users className="h-10 w-10 mb-3 opacity-30" />
         <p>No users yet.</p>
       </div>
@@ -60,7 +60,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Users</h1>
         <p className="text-muted-foreground mt-1">{count} registered</p>

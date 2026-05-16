@@ -49,7 +49,7 @@ export default async function SubjectPage({ params }: Props) {
   const canTakeTest = (questionCount ?? 0) >= 20
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl">
+    <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/subjects">
@@ -71,7 +71,7 @@ export default async function SubjectPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xs:grid-cols-2 sm:grid-cols-4">
         {[
           { label: "Questions", value: questionCount ?? 0, variant: "outline" as const },
           { label: "Correct", value: correct, variant: "success" as const },
