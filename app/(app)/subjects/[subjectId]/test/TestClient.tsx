@@ -176,7 +176,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
             <CardContent className="pt-6 space-y-4 text-left">
               {[
                 ["Questions", "20 random questions"],
-                ["Time limit", "20 minutes"],
+                ["Time limit", "10 minutes"],
                 ["Scoring", "Partial credit for partially correct answers"],
                 ["After submit", "Full review with correct answers"],
               ].map(([label, value]) => (
@@ -215,8 +215,20 @@ export function TestClient({ subject, questionCount, userId }: Props) {
   const confirmedCount = Object.keys(results).length
   const liveScore = Object.values(results).reduce((sum, r) => sum + r.score, 0)
   const progressPct = (confirmedCount / testData.questions.length) * 100
-  const isLast = currentIndex === testData.questions.length - 1
-  const timerWarning = secondsLeft <= 120
+  const timerWarning = secondsLeft <= 60
+  const allConfirmed = confirmedCount === testData.questions.length
+
+  // Next unanswered question after current index, wrapping around
+  const nextUnansweredIndex = (() => {
+    const qs = testData.questions
+    for (let i = currentIndex + 1; i < qs.length; i++) {
+      if (!results[qs[i].id]) return i
+    }
+    for (let i = 0; i < currentIndex; i++) {
+      if (!results[qs[i].id]) return i
+    }
+    return null // all confirmed
+  })()
 
   // ── Active test ───────────────────────────────────────────────
   return (
@@ -256,31 +268,33 @@ export function TestClient({ subject, questionCount, userId }: Props) {
         </Button>
       </div>
 
-      {/* Question dots */}
-      <div className="border-b px-3 sm:px-6 py-2 flex gap-1 overflow-x-auto">
-        {testData.questions.map((q, i) => {
-          const result = results[q.id]
-          const isCurrent = i === currentIndex
-          let dotStyle = "bg-muted text-muted-foreground hover:bg-muted/80"
-          if (isCurrent) {
-            dotStyle = "bg-primary text-primary-foreground"
-          } else if (result) {
-            if (result.status === "correct") dotStyle = "bg-green-500 text-white"
-            else if (result.status === "partial") dotStyle = "bg-yellow-400 text-white"
-            else dotStyle = "bg-red-400 text-white"
-          } else if ((answers[q.id] ?? []).length > 0) {
-            dotStyle = "bg-primary/20 text-primary hover:bg-primary/30"
-          }
-          return (
-            <button
-              key={q.id}
-              onClick={() => setCurrentIndex(i)}
-              className={`h-6 w-6 shrink-0 rounded text-xs font-medium transition-colors ${dotStyle}`}
-            >
-              {i + 1}
-            </button>
-          )
-        })}
+      {/* Question dots — single scrolling row on sm+, 2-row grid on mobile */}
+      <div className="border-b px-3 sm:px-6 py-2">
+        <div className="grid grid-cols-10 gap-1 sm:flex sm:flex-wrap sm:gap-1">
+          {testData.questions.map((q, i) => {
+            const result = results[q.id]
+            const isCurrent = i === currentIndex
+            let dotStyle = "bg-muted text-muted-foreground hover:bg-muted/80"
+            if (isCurrent) {
+              dotStyle = "bg-primary text-primary-foreground"
+            } else if (result) {
+              if (result.status === "correct") dotStyle = "bg-green-500 text-white"
+              else if (result.status === "partial") dotStyle = "bg-yellow-400 text-white"
+              else dotStyle = "bg-red-400 text-white"
+            } else if ((answers[q.id] ?? []).length > 0) {
+              dotStyle = "bg-primary/20 text-primary hover:bg-primary/30"
+            }
+            return (
+              <button
+                key={q.id}
+                onClick={() => setCurrentIndex(i)}
+                className={`h-6 w-full sm:w-6 rounded text-xs font-medium transition-colors ${dotStyle}`}
+              >
+                {i + 1}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Question */}
@@ -403,17 +417,18 @@ export function TestClient({ subject, questionCount, userId }: Props) {
               Previous
             </Button>
 
-            {isLast ? (
+            {allConfirmed ? (
               <Button
                 onClick={() => handleSubmit(false)}
                 disabled={phase === "submitting"}
               >
                 <Flag className="h-4 w-4 mr-1" />
-                Finish & submit
+                {phase === "submitting" ? "Submitting…" : "Finish & submit"}
               </Button>
             ) : (
               <Button
-                onClick={() => setCurrentIndex((i) => i + 1)}
+                onClick={() => nextUnansweredIndex !== null && setCurrentIndex(nextUnansweredIndex)}
+                disabled={nextUnansweredIndex === null}
                 variant={isConfirmed ? "default" : "outline"}
               >
                 Next

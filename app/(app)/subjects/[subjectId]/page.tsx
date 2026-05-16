@@ -150,7 +150,15 @@ export default async function SubjectPage({ params }: Props) {
               <Link key={test.id} href={`/tests/${test.id}/review`}>
                 <div className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
                   <span className="text-sm text-muted-foreground">
-                    {new Date(test.started_at).toLocaleDateString()}
+                    {new Date(test.started_at).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}{" "}
+                    {new Date(test.started_at).toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                   <Badge
                     variant={

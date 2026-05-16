@@ -75,7 +75,13 @@ export default async function SubjectTestsPage({ params }: Props) {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
-                        })}
+                        })}{" "}
+                        <span className="text-muted-foreground font-normal">
+                          {new Date(test.started_at).toLocaleTimeString("en-GB", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
                       </p>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">

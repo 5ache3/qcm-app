@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { calculateQuestionScore, getQuestionStatus } from "@/lib/scoring"
 
-const TEST_DURATION_SECONDS = 20 * 60 // 20 minutes
+const TEST_DURATION_SECONDS = 10 * 60 // 10 minutes
 
 export async function startTest(subjectId: string) {
   const supabase = await createClient()
@@ -23,13 +23,33 @@ export async function startTest(subjectId: string) {
     .limit(1)
     .maybeSingle()
 
-  let testId: string
-  let startedAt: string
+  let testId!: string
+  let startedAt!: string
+  let needNewTest = true
 
   if (existing) {
-    testId = existing.id
-    startedAt = existing.started_at
-  } else {
+    const elapsedSeconds = Math.floor(
+      (Date.now() - new Date(existing.started_at).getTime()) / 1000
+    )
+    if (elapsedSeconds < TEST_DURATION_SECONDS) {
+      // Still within time — resume it
+      testId = existing.id
+      startedAt = existing.started_at
+      needNewTest = false
+    } else {
+      // Already expired — mark it and create a fresh one
+      await supabase
+        .from("tests")
+        .update({
+          status: "expired",
+          completed_at: new Date().toISOString(),
+          duration_seconds: elapsedSeconds,
+        })
+        .eq("id", existing.id)
+    }
+  }
+
+  if (needNewTest) {
     // Pick 20 random questions
     const { data: allQuestions } = await supabase
       .from("questions")
@@ -50,7 +70,7 @@ export async function startTest(subjectId: string) {
 
     if (error || !test) throw new Error("Failed to create test")
 
-    testId = test.id
+    testId = test.id!
     startedAt = test.started_at
 
     await supabase.from("test_questions").insert(

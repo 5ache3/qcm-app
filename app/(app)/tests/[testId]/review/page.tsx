@@ -100,7 +100,17 @@ export default async function TestReviewPage({ params }: Props) {
               <Clock className="h-3.5 w-3.5" />
               {formatDuration(test.duration_seconds)}
             </span>
-            <span>{new Date(test.started_at).toLocaleDateString()}</span>
+            <span>
+              {new Date(test.started_at).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}{" "}
+              {new Date(test.started_at).toLocaleTimeString("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
             {test.status === "expired" && (
               <Badge variant="error">Time expired</Badge>
             )}

@@ -158,11 +158,10 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
               <button
                 key={q.id}
                 onClick={() => setCurrentIndex(i)}
-                className={`flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors w-full ${
-                  i === currentIndex
-                    ? "bg-accent text-accent-foreground font-medium"
-                    : "hover:bg-muted text-muted-foreground"
-                }`}
+                className={`flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors w-full ${i === currentIndex
+                  ? "bg-accent text-accent-foreground font-medium"
+                  : "hover:bg-muted text-muted-foreground"
+                  }`}
               >
                 <span className="shrink-0 w-5 text-xs">{i + 1}.</span>
                 <span className="truncate flex-1">{q.question_text.slice(0, 30)}…</span>
@@ -219,9 +218,8 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
                   return (
                     <label
                       key={option.id}
-                      className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${optionStyle} ${
-                        isSubmitted ? "cursor-default" : "hover:bg-muted/50"
-                      }`}
+                      className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${optionStyle} ${isSubmitted ? "cursor-default" : "hover:bg-muted/50"
+                        }`}
                     >
                       <Checkbox
                         checked={isSelected}
@@ -247,14 +245,13 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
               </Card>
             )}
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-around">
               <Button
                 variant="outline"
                 onClick={handlePrev}
                 disabled={currentIndex === 0}
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
-                Previous
               </Button>
 
               <div className="flex gap-2">
@@ -267,13 +264,13 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
                     Submit answer
                   </Button>
                 )}
-                {currentIndex < shuffledQuestions.length - 1 && (
-                  <Button variant={isSubmitted ? "default" : "outline"} onClick={handleNext}>
-                    Next
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                )}
               </div>
+              {currentIndex < shuffledQuestions.length - 1 && (
+                <Button variant={isSubmitted ? "default" : "outline"} onClick={handleNext}>
+
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              )}
             </div>
 
             {isSubmitted && !question.explanation && <Separator />}
