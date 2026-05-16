@@ -13,7 +13,7 @@ export default async function SubjectsPage() {
 
   const { data: subjects } = await supabase
     .from("subjects")
-    .select("id, name, description, icon")
+    .select("id, name, description, icon, questions!inner(id)")
     .order("name")
 
   const { data: practiceAnswers } = await supabase
