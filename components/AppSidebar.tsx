@@ -11,7 +11,7 @@ import {
   Users,
   BarChart2,
   LogOut,
-  Settings,
+  UserCircle,
 } from "lucide-react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
@@ -34,6 +34,7 @@ const studentNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/subjects", label: "Subjects", icon: BookMarked },
   { href: "/mistakes", label: "Mistakes", icon: AlertCircle },
+  { href: "/profile", label: "Profile", icon: UserCircle },
 ]
 
 const adminNav = [
