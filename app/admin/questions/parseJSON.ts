@@ -21,8 +21,14 @@ export function parseJSON(jsonText: string): { questions: ParsedQuestion[]; erro
     return { questions: [], errors: ["Invalid JSON — could not parse file"] }
   }
 
+  // Accept { subject, questions: [...] } wrapper as well as a bare array
   if (!Array.isArray(raw)) {
-    return { questions: [], errors: ["JSON must be an array of question objects"] }
+    const wrapped = raw as Record<string, unknown>
+    if (Array.isArray(wrapped.questions)) {
+      raw = wrapped.questions
+    } else {
+      return { questions: [], errors: ["JSON must be an array of question objects (or an object with a 'questions' array)"] }
+    }
   }
 
   const errors: string[] = []
@@ -51,7 +57,7 @@ export function parseJSON(jsonText: string): { questions: ParsedQuestion[]; erro
     const rawDiff = typeof item.difficulty === "string" ? item.difficulty.toLowerCase().trim() : ""
     const difficulty = ["easy", "medium", "hard"].includes(rawDiff) ? rawDiff : null
 
-    const rawOptions = item.options ?? item.answers ?? item.choices
+    const rawOptions = item.options ?? item.answer_options ?? item.answers ?? item.choices
     if (!Array.isArray(rawOptions) || rawOptions.length === 0) {
       errors.push(`${label}: "${question_text.slice(0, 40)}" — missing options array, skipped`)
       continue

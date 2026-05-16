@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { QuestionStatusBadge } from "@/components/QuestionStatusBadge"
+import { shuffleArray } from "@/lib/utils"
 
 export default async function MistakesPage() {
   const supabase = await createClient()
@@ -88,9 +89,7 @@ export default async function MistakesPage() {
             {subAnswers.map((ans) => {
               const q = ans.questions as any
               const selectedIds: string[] = ans.selected_option_ids
-              const sortedOptions = [...(q.answer_options ?? [])].sort(
-                (a: any, b: any) => a.position - b.position
-              )
+              const sortedOptions = shuffleArray(q.answer_options ?? [])
 
               return (
                 <Card key={ans.question_id}>

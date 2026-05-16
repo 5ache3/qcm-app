@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { QuestionStatusBadge } from "@/components/QuestionStatusBadge"
+import { shuffleArray } from "@/lib/utils"
 import type { QuestionStatus } from "@/lib/scoring"
 
 interface Props {
@@ -116,9 +117,7 @@ export default async function TestReviewPage({ params }: Props) {
           const answer = answerMap.get(tq.question_id)
           const selectedIds: string[] = answer?.selected_option_ids ?? []
           const status = (answer?.status ?? "unanswered") as QuestionStatus
-          const sortedOptions = [...(q.answer_options ?? [])].sort(
-            (a: any, b: any) => a.position - b.position
-          )
+          const sortedOptions = shuffleArray(q.answer_options ?? [])
 
           return (
             <Card key={tq.question_id}>

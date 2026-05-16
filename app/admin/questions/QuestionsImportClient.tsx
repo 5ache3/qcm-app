@@ -190,11 +190,17 @@ export function QuestionsImportClient({ subjects }: Props) {
       <div className="space-y-3">
         <h2 className="font-semibold">2. Upload file</h2>
         <label
-          className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 cursor-pointer transition-colors ${
+          className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
             selectedSubject
-              ? "border-border hover:border-primary hover:bg-muted/30"
+              ? "border-border hover:border-primary hover:bg-muted/30 cursor-pointer"
               : "border-border opacity-50 cursor-not-allowed"
           }`}
+          onClick={(e) => {
+            if (!selectedSubject) {
+              e.preventDefault()
+              toast.warning("Select a subject first (step 1)")
+            }
+          }}
         >
           <Upload className="h-8 w-8 text-muted-foreground mb-2" />
           <span className="text-sm font-medium">Click to upload CSV or JSON</span>

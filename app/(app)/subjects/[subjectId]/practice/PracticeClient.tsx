@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useMemo, useTransition } from "react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react"
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { QuestionStatusBadge } from "@/components/QuestionStatusBadge"
 import { calculateQuestionScore, getQuestionStatus } from "@/lib/scoring"
+import { shuffleArray } from "@/lib/utils"
 import { saveAnswer } from "./actions"
 
 interface AnswerOption {
@@ -42,8 +43,15 @@ interface Props {
 }
 
 export function PracticeClient({ subject, questions, existingAnswers, userId }: Props) {
+  // Shuffle options once on mount (client-side) so order is truly random
+  // and not subject to server-side caching.
+  const shuffledQuestions = useMemo(
+    () => questions.map((q) => ({ ...q, answer_options: shuffleArray(q.answer_options) })),
+    [] // eslint-disable-line react-hooks/exhaustive-deps
+  )
+
   const [currentIndex, setCurrentIndex] = useState(() => {
-    const firstUnanswered = questions.findIndex((q) => !existingAnswers[q.id])
+    const firstUnanswered = shuffledQuestions.findIndex((q) => !existingAnswers[q.id])
     return firstUnanswered === -1 ? 0 : firstUnanswered
   })
   const [localAnswers, setLocalAnswers] = useState<Record<string, string[]>>(() => {
@@ -62,7 +70,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
   })
   const [isPending, startTransition] = useTransition()
 
-  const question = questions[currentIndex]
+  const question = shuffledQuestions[currentIndex]
   const correctIds = question.answer_options.filter((o) => o.is_correct).map((o) => o.id)
   const selected = localAnswers[question.id] ?? []
   const isSubmitted = submitted[question.id] ?? false
@@ -101,7 +109,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
   }
 
   function handleNext() {
-    if (currentIndex < questions.length - 1) setCurrentIndex((i) => i + 1)
+    if (currentIndex < shuffledQuestions.length - 1) setCurrentIndex((i) => i + 1)
   }
 
   function handlePrev() {
@@ -109,7 +117,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
   }
 
   const totalAnswered = Object.keys(submitted).length
-  const totalCorrect = questions.filter((q) => {
+  const totalCorrect = shuffledQuestions.filter((q) => {
     const s = submitted[q.id]
     if (!s) return false
     const sel = localAnswers[q.id] ?? []
@@ -130,7 +138,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
           <span className="font-semibold text-sm">{subject.icon ?? "📚"} {subject.name}</span>
         </div>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>{totalAnswered}/{questions.length} answered</span>
+          <span>{totalAnswered}/{shuffledQuestions.length} answered</span>
           {totalAnswered > 0 && (
             <Badge variant="success">{totalCorrect} correct</Badge>
           )}
@@ -140,7 +148,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
       <div className="flex flex-1 overflow-hidden">
         {/* Question list sidebar */}
         <div className="hidden lg:flex w-56 flex-col border-r overflow-y-auto p-3 gap-1">
-          {questions.map((q, i) => {
+          {shuffledQuestions.map((q, i) => {
             const sel = localAnswers[q.id] ?? []
             const corr = q.answer_options.filter((o) => o.is_correct).map((o) => o.id)
             const s = submitted[q.id]
@@ -173,7 +181,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
           <div className="max-w-2xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                Question {currentIndex + 1} of {questions.length}
+                Question {currentIndex + 1} of {shuffledQuestions.length}
               </span>
               <div className="flex items-center gap-2">
                 {question.difficulty && (
@@ -259,7 +267,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
                     Submit answer
                   </Button>
                 )}
-                {currentIndex < questions.length - 1 && (
+                {currentIndex < shuffledQuestions.length - 1 && (
                   <Button variant={isSubmitted ? "default" : "outline"} onClick={handleNext}>
                     Next
                     <ArrowRight className="h-4 w-4 ml-1" />
