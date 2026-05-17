@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { QuestionStatusBadge } from "@/components/QuestionStatusBadge"
+import { RetakeButton } from "@/components/RetakeButton"
 import type { QuestionStatus } from "@/lib/scoring"
 
 interface Props {
@@ -190,9 +191,7 @@ export default async function TestReviewPage({ params }: Props) {
         <Button asChild variant="outline">
           <Link href={`/subjects/${test.subject_id}`}>{t.review_back_subject}</Link>
         </Button>
-        <Button asChild>
-          <Link href={`/subjects/${test.subject_id}/test`}>{t.review_retake}</Link>
-        </Button>
+        <RetakeButton testId={testId} variant="default" size="default" />
       </div>
     </div>
   )

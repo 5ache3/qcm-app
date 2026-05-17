@@ -6,6 +6,7 @@ import { ArrowLeft, Clock, Trophy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { RetakeButton } from "@/components/RetakeButton"
 
 interface Props {
   params: Promise<{ subjectId: string }>
@@ -35,11 +36,25 @@ export default async function SubjectTestsPage({ params }: Props) {
 
   const { data: tests } = await supabase
     .from("tests")
-    .select("id, started_at, completed_at, duration_seconds, score, percentage, status")
+    .select("id, started_at, completed_at, duration_seconds, score, percentage, status, retake_of")
     .eq("user_id", user!.id)
     .eq("subject_id", subjectId)
     .in("status", ["completed", "expired"])
     .order("started_at", { ascending: false })
+
+  // Compute attempt number for each test (1 = original, 2 = first retry, etc.)
+  const attemptMap = new Map<string, number>()
+  if (tests) {
+    for (const test of [...tests].reverse()) {
+      const retakeOf = test.retake_of as string | null
+      if (!retakeOf) {
+        attemptMap.set(test.id, 1)
+      } else {
+        const parentAttempt = attemptMap.get(retakeOf) ?? 1
+        attemptMap.set(test.id, parentAttempt + 1)
+      }
+    }
+  }
 
   const locale = lang === "ar" ? "ar-MA" : "fr-FR"
 
@@ -68,44 +83,59 @@ export default async function SubjectTestsPage({ params }: Props) {
         <div className="flex flex-col space-y-2">
           {tests.map((test) => {
             const pct = test.percentage ?? 0
+            const attempt = attemptMap.get(test.id) ?? 1
+
             return (
-              <Link key={test.id} href={`/tests/${test.id}/review`}>
-                <Card className="hover:shadow-sm transition-shadow cursor-pointer">
-                  <CardContent className="flex items-center justify-between p-4">
+              <Card key={test.id} className="hover:shadow-sm transition-shadow">
+                <CardContent className="flex items-center gap-3 p-4">
+                  {/* Clickable area → review */}
+                  <Link href={`/tests/${test.id}/review`} className="flex-1 min-w-0">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium">
-                        {new Date(test.started_at).toLocaleDateString(locale, {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}{" "}
-                        <span className="text-muted-foreground font-normal">
-                          {new Date(test.started_at).toLocaleTimeString(locale, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium">
+                          {new Date(test.started_at).toLocaleDateString(locale, {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}{" "}
+                          <span className="text-muted-foreground font-normal">
+                            {new Date(test.started_at).toLocaleTimeString(locale, {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </p>
+                        {attempt > 1 && (
+                          <Badge variant="outline" className="text-xs">
+                            {t.retake_label} #{attempt}
+                          </Badge>
+                        )}
+                        {test.status === "expired" && (
+                          <Badge variant="warning" className="text-xs">{t.test_expired}</Badge>
+                        )}
+                      </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {formatDuration(test.duration_seconds)}
                         </span>
                         <span>{(test.score ?? 0).toFixed(2)} pts</span>
-                        {test.status === "expired" && (
-                          <Badge variant="warning" className="text-xs">{t.test_expired}</Badge>
-                        )}
                       </div>
                     </div>
+                  </Link>
+
+                  {/* Score badge + retake button */}
+                  <div className="flex items-center gap-2 shrink-0">
                     <Badge
                       variant={pct >= 80 ? "success" : pct >= 50 ? "warning" : "error"}
                       className="text-sm px-3 py-1"
                     >
                       {pct.toFixed(0)}%
                     </Badge>
-                  </CardContent>
-                </Card>
-              </Link>
+                    <RetakeButton testId={test.id} iconOnly size="sm" />
+                  </div>
+                </CardContent>
+              </Card>
             )
           })}
         </div>

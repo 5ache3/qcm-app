@@ -163,6 +163,62 @@ export async function saveTestAnswer(
   })
 }
 
+export async function retakeTest(originalTestId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error("Not authenticated")
+
+  const { data: original } = await supabase
+    .from("tests")
+    .select("subject_id")
+    .eq("id", originalTestId)
+    .eq("user_id", user.id)
+    .single()
+
+  if (!original) throw new Error("Test not found")
+
+  const { data: originalQuestions } = await supabase
+    .from("test_questions")
+    .select("question_id, position")
+    .eq("test_id", originalTestId)
+    .order("position")
+
+  if (!originalQuestions?.length) throw new Error("No questions found")
+
+  // Expire any existing in-progress test for this subject so startTest resumes the retake
+  await supabase
+    .from("tests")
+    .update({ status: "expired", completed_at: new Date().toISOString() })
+    .eq("user_id", user.id)
+    .eq("subject_id", original.subject_id)
+    .eq("status", "in_progress")
+
+  const { data: newTest, error } = await supabase
+    .from("tests")
+    .insert({
+      user_id: user.id,
+      subject_id: original.subject_id,
+      status: "in_progress",
+      retake_of: originalTestId,
+    })
+    .select("id")
+    .single()
+
+  if (error || !newTest) throw new Error("Failed to create retake")
+
+  await supabase.from("test_questions").insert(
+    originalQuestions.map((q) => ({
+      test_id: newTest.id,
+      question_id: q.question_id,
+      position: q.position,
+    }))
+  )
+
+  return { subjectId: original.subject_id as string }
+}
+
 export async function submitTest(
   testId: string,
   answers: { questionId: string; selectedOptionIds: string[] }[],

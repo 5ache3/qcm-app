@@ -128,6 +128,7 @@ export type Dict = {
   test_expired: string
 
   // Review
+  retake_label: string
   review_back: string
   review_title: string
   review_time_expired: string
@@ -380,6 +381,7 @@ const fr: Dict = {
   test_expired: "Expiré",
 
   // Review
+  retake_label: "Réessai",
   review_back: "Retour",
   review_title: "Révision des questions",
   review_time_expired: "Temps expiré",
@@ -632,6 +634,7 @@ const ar: Dict = {
   test_expired: "منتهي",
 
   // Review
+  retake_label: "إعادة محاولة",
   review_back: "رجوع",
   review_title: "مراجعة الأسئلة",
   review_time_expired: "انتهى الوقت",
