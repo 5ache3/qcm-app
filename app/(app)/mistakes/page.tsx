@@ -57,7 +57,7 @@ export default async function MistakesPage() {
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="flex flex-col space-y-1">
         {subjects.map(({ subject, wrong, partial }) => (
           <Link key={subject.id} href={`/mistakes/${subject.id}`}>
             <Card className="hover:bg-muted/40 transition-colors cursor-pointer">
