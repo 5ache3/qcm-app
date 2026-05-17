@@ -66,7 +66,8 @@ export default async function AdminUsersPage({ searchParams }: Props) {
     )
   }
 
-  function UserCard({ profile }: { profile: typeof profiles[number] }) {
+  type ProfileRow = NonNullable<typeof profiles>[number]
+  function UserCard({ profile }: { profile: ProfileRow }) {
     const pct = profile.status === "pending"
     return (
       <Card className={`hover:shadow-sm transition-shadow ${pct ? "border-amber-200 bg-amber-50/50 dark:bg-amber-950/10" : ""}`}>
