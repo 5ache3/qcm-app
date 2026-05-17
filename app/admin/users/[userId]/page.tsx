@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { DeleteTestButton } from "@/components/DeleteTestButton"
 
 interface Props {
   params: Promise<{ userId: string }>
@@ -146,8 +147,8 @@ export default async function AdminUserDetailPage({ params }: Props) {
               const subject = subjectMap.get(test.subject_id)
               const pct = test.percentage ?? 0
               return (
-                <Link key={test.id} href={`/tests/${test.id}/review`}>
-                  <div className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                <div key={test.id} className="flex items-center gap-2 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                  <Link href={`/tests/${test.id}/review`} className="flex-1 min-w-0 flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium">
                         {subject?.icon ?? "📚"} {subject?.name ?? t.admin_user_unknown}
@@ -159,8 +160,9 @@ export default async function AdminUserDetailPage({ params }: Props) {
                     <Badge variant={pct >= 80 ? "success" : pct >= 50 ? "warning" : "error"}>
                       {pct.toFixed(0)}%
                     </Badge>
-                  </div>
-                </Link>
+                  </Link>
+                  <DeleteTestButton testId={test.id} iconOnly size="sm" />
+                </div>
               )
             })}
           </div>

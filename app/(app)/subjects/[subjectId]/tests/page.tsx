@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { RetakeButton } from "@/components/RetakeButton"
+import { DeleteTestButton } from "@/components/DeleteTestButton"
 
 interface Props {
   params: Promise<{ subjectId: string }>
@@ -116,7 +117,7 @@ export default async function SubjectTestsPage({ params }: Props) {
                     </div>
                   </Link>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0">
                     <Badge
                       variant={pct >= 80 ? "success" : pct >= 50 ? "warning" : "error"}
                       className="text-sm px-3 py-1"
@@ -124,6 +125,7 @@ export default async function SubjectTestsPage({ params }: Props) {
                       {pct.toFixed(0)}%
                     </Badge>
                     <RetakeButton testId={test.id} iconOnly size="sm" />
+                    <DeleteTestButton testId={test.id} iconOnly size="sm" />
                   </div>
                 </CardContent>
               </Card>

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { QuestionStatusBadge } from "@/components/QuestionStatusBadge"
 import { RetakeButton } from "@/components/RetakeButton"
+import { DeleteTestButton } from "@/components/DeleteTestButton"
 import type { QuestionStatus } from "@/lib/scoring"
 
 interface Props {
@@ -206,11 +207,16 @@ export default async function TestReviewPage({ params }: Props) {
       </div>
 
       <Separator />
-      <div className="flex gap-3 pb-6">
+      <div className="flex items-center gap-3 pb-6">
         <Button asChild variant="outline">
           <Link href={`/subjects/${test.subject_id}`}>{t.review_back_subject}</Link>
         </Button>
         <RetakeButton testId={testId} variant="default" size="default" />
+        <DeleteTestButton
+          testId={testId}
+          redirectTo={`/subjects/${test.subject_id}/tests`}
+          size="default"
+        />
       </div>
     </div>
   )

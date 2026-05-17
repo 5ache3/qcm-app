@@ -174,6 +174,31 @@ export async function saveTestAnswer(
   })
 }
 
+export async function deleteTest(testId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { success: false }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single()
+
+  const isAdmin = profile?.role === "admin"
+
+  // Delete child rows first in case FK cascade is not set
+  await supabase.from("test_answers").delete().eq("test_id", testId)
+  await supabase.from("test_questions").delete().eq("test_id", testId)
+
+  const query = supabase.from("tests").delete().eq("id", testId)
+  const { error } = isAdmin ? await query : await query.eq("user_id", user.id)
+
+  return { success: !error }
+}
+
 export async function retakeTest(originalTestId: string) {
   const supabase = await createClient()
   const {
