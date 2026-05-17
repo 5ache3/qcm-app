@@ -92,6 +92,9 @@ export type Dict = {
   save_error_toast: string
   answered_label: string
   correct_label: string
+  practice_questions_btn: string
+  practice_all_questions: string
+  practice_unanswered: string
 
   // Test
   test_random_questions: string
@@ -114,6 +117,7 @@ export type Dict = {
   test_incorrect: string
   test_opt_correct: string
   test_opt_incorrect: string
+  test_resume: string
   test_time_up_toast: string
   test_submit_fail_toast: string
   test_confirm_answer: string
@@ -340,6 +344,9 @@ const fr: Dict = {
   save_error_toast: "Échec de la sauvegarde de la réponse",
   answered_label: "répondu(e)s",
   correct_label: "correct(s)",
+  practice_questions_btn: "Questions",
+  practice_all_questions: "Toutes les questions",
+  practice_unanswered: "Sans réponse",
 
   // Test
   test_random_questions: "20 questions aléatoires",
@@ -362,6 +369,7 @@ const fr: Dict = {
   test_incorrect: "Incorrect",
   test_opt_correct: "correct",
   test_opt_incorrect: "incorrect",
+  test_resume: "Reprendre le test",
   test_time_up_toast: "Temps écoulé ! Votre test a été soumis.",
   test_submit_fail_toast: "Échec de la soumission du test. Veuillez réessayer.",
   test_confirm_answer: "Confirmer la réponse",
@@ -588,6 +596,9 @@ const ar: Dict = {
   save_error_toast: "فشل حفظ الإجابة",
   answered_label: "تمت الإجابة",
   correct_label: "صحيح",
+  practice_questions_btn: "الأسئلة",
+  practice_all_questions: "جميع الأسئلة",
+  practice_unanswered: "بدون إجابة",
 
   // Test
   test_random_questions: "20 سؤالاً عشوائياً",
@@ -610,6 +621,7 @@ const ar: Dict = {
   test_incorrect: "خاطئ",
   test_opt_correct: "صحيح",
   test_opt_incorrect: "خاطئ",
+  test_resume: "استئناف الاختبار",
   test_time_up_toast: "انتهى الوقت! تم إرسال اختبارك.",
   test_submit_fail_toast: "فشل إرسال الاختبار. حاول مجدداً.",
   test_confirm_answer: "تأكيد الإجابة",

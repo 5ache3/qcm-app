@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { PracticeClient } from "./PracticeClient"
+import { shuffleArray } from "@/lib/utils"
 
 interface Props {
   params: Promise<{ subjectId: string }>
@@ -35,10 +36,10 @@ export default async function PracticePage({ params }: Props) {
 
   if (!subject || !questions) notFound()
 
-  // Sort options by position
+  // Sort options by position then shuffle for variety
   const questionsWithSortedOptions = questions.map((q) => ({
     ...q,
-    answer_options: [...(q.answer_options ?? [])].sort((a, b) => a.position - b.position),
+    answer_options: shuffleArray([...(q.answer_options ?? [])].sort((a, b) => a.position - b.position)),
   }))
 
   // Load existing answers for this user + subject

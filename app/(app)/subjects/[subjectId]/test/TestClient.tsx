@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Timer, ArrowLeft, ArrowRight, Flag, CheckCircle2 } from "lucide-react"
+import { Timer, ArrowLeft, ArrowRight, Flag, CheckCircle2, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -13,7 +13,7 @@ import { calculateQuestionScore, getQuestionStatus } from "@/lib/scoring"
 import type { QuestionStatus } from "@/lib/scoring"
 import { shuffleArray } from "@/lib/utils"
 import { useT } from "@/lib/i18n-client"
-import { startTest, submitTest } from "./actions"
+import { startTest, saveTestAnswer, submitTest } from "./actions"
 
 interface AnswerOption {
   id: string
@@ -48,9 +48,10 @@ interface Props {
   subject: { id: string; name: string; icon: string | null }
   questionCount: number
   userId: string
+  hasActiveTest: boolean
 }
 
-export function TestClient({ subject, questionCount, userId }: Props) {
+export function TestClient({ subject, questionCount, userId, hasActiveTest }: Props) {
   const t = useT()
   const router = useRouter()
   const [phase, setPhase] = useState<Phase>("start")
@@ -90,7 +91,6 @@ export function TestClient({ subject, questionCount, userId }: Props) {
   useEffect(() => {
     if (phase !== "active" || !testData) return
 
-    // Calculate remaining time from startedAt
     const elapsed = Math.floor(
       (Date.now() - new Date(testData.startedAt).getTime()) / 1000
     )
@@ -126,13 +126,28 @@ export function TestClient({ subject, questionCount, userId }: Props) {
     startTransition(async () => {
       try {
         const data = await startTest(subject.id)
-        setTestData({
-          ...data,
-          questions: data.questions.map((q) => ({
-            ...q,
-            answer_options: shuffleArray(q.answer_options),
-          })),
-        })
+        const shuffledQuestions = data.questions.map((q) => ({
+          ...q,
+          answer_options: shuffleArray(q.answer_options),
+        }))
+        setTestData({ ...data, questions: shuffledQuestions })
+
+        // Restore confirmed answers from DB (resume case)
+        if (data.savedAnswers.length > 0) {
+          const restoredAnswers: Record<string, string[]> = {}
+          const restoredResults: Record<string, QuestionResult> = {}
+          for (const sa of data.savedAnswers) {
+            restoredAnswers[sa.questionId] = sa.selectedOptionIds
+            restoredResults[sa.questionId] = { score: sa.score, status: sa.status }
+          }
+          setAnswers(restoredAnswers)
+          setResults(restoredResults)
+
+          // Jump to the first unanswered question
+          const firstUnanswered = shuffledQuestions.findIndex((q) => !restoredResults[q.id])
+          setCurrentIndex(firstUnanswered === -1 ? 0 : firstUnanswered)
+        }
+
         setPhase("active")
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : null
@@ -155,12 +170,15 @@ export function TestClient({ subject, questionCount, userId }: Props) {
   }
 
   function confirmAnswer(question: Question) {
-    if (results[question.id]) return
+    if (!testData || results[question.id]) return
     const selected = answers[question.id] ?? []
     const correctIds = question.answer_options.filter((o) => o.is_correct).map((o) => o.id)
     const score = calculateQuestionScore(selected, correctIds)
     const status = getQuestionStatus(selected, correctIds)
     setResults((prev) => ({ ...prev, [question.id]: { score, status } }))
+
+    // Persist immediately so a page refresh doesn't lose this answer
+    saveTestAnswer(testData.testId, question.id, selected, score, status)
   }
 
   // ── Start screen ──────────────────────────────────────────────
@@ -201,7 +219,12 @@ export function TestClient({ subject, questionCount, userId }: Props) {
               onClick={handleStart}
               disabled={isPending}
             >
-              {isPending ? t.test_preparing : t.test_start}
+              {isPending ? t.test_preparing : hasActiveTest ? (
+                <>
+                  <RotateCcw className="h-4 w-4 me-2" />
+                  {t.test_resume}
+                </>
+              ) : t.test_start}
             </Button>
           )}
         </div>
@@ -273,7 +296,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
         </Button>
       </div>
 
-      {/* Question dots — single scrolling row on sm+, 2-row grid on mobile */}
+      {/* Question dots */}
       <div className="border-b px-3 sm:px-6 py-2">
         <div className="grid grid-cols-10 gap-1 sm:flex sm:flex-wrap sm:gap-1">
           {testData.questions.map((q, i) => {
@@ -402,7 +425,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
                 </div>
               )}
 
-              {/* Explanation (shown after confirm) */}
+              {/* Explanation */}
               {isConfirmed && question.explanation && (
                 <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 px-3 py-2">
                   <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">{t.explanation_label}</p>

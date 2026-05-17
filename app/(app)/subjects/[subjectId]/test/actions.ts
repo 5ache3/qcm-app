@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { calculateQuestionScore, getQuestionStatus } from "@/lib/scoring"
+import type { QuestionStatus } from "@/lib/scoring"
 
 const TEST_DURATION_SECONDS = 20 * 60 // 20 minutes
 
@@ -25,7 +26,7 @@ export async function startTest(subjectId: string) {
 
   let testId!: string
   let startedAt!: string
-  let needNewTest = true
+  let isResume = false
 
   if (existing) {
     const elapsedSeconds = Math.floor(
@@ -35,7 +36,7 @@ export async function startTest(subjectId: string) {
       // Still within time — resume it
       testId = existing.id
       startedAt = existing.started_at
-      needNewTest = false
+      isResume = true
     } else {
       // Already expired — mark it and create a fresh one
       await supabase
@@ -49,7 +50,7 @@ export async function startTest(subjectId: string) {
     }
   }
 
-  if (needNewTest) {
+  if (!isResume) {
     // Pick 20 random questions
     const { data: allQuestions } = await supabase
       .from("questions")
@@ -118,7 +119,48 @@ export async function startTest(subjectId: string) {
     }
   })
 
-  return { testId, startedAt, questions, durationSeconds: TEST_DURATION_SECONDS }
+  // Load saved answers for a resumed test
+  let savedAnswers: { questionId: string; selectedOptionIds: string[]; score: number; status: QuestionStatus }[] = []
+  if (isResume) {
+    const { data: existing } = await supabase
+      .from("test_answers")
+      .select("question_id, selected_option_ids, score, status")
+      .eq("test_id", testId)
+
+    savedAnswers = (existing ?? []).map((a) => ({
+      questionId: a.question_id as string,
+      selectedOptionIds: a.selected_option_ids as string[],
+      score: a.score as number,
+      status: a.status as QuestionStatus,
+    }))
+  }
+
+  return { testId, startedAt, questions, durationSeconds: TEST_DURATION_SECONDS, savedAnswers }
+}
+
+export async function saveTestAnswer(
+  testId: string,
+  questionId: string,
+  selectedOptionIds: string[],
+  score: number,
+  status: string,
+) {
+  const supabase = await createClient()
+  // Delete previous save for this question (in case of re-confirm after page reload edge case)
+  await supabase
+    .from("test_answers")
+    .delete()
+    .eq("test_id", testId)
+    .eq("question_id", questionId)
+
+  await supabase.from("test_answers").insert({
+    test_id: testId,
+    question_id: questionId,
+    selected_option_ids: selectedOptionIds,
+    score,
+    status,
+    answered_at: new Date().toISOString(),
+  })
 }
 
 export async function submitTest(
@@ -165,7 +207,8 @@ export async function submitTest(
     }
   })
 
-  // Batch-save answers
+  // Remove any incremental saves then insert final answers
+  await supabase.from("test_answers").delete().eq("test_id", testId)
   const { error: ansErr } = await supabase.from("test_answers").insert(
     testAnswerRows.map(({ tqId: _, ...row }) => row)
   )

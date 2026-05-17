@@ -1,17 +1,23 @@
 "use client"
 
-import { useState, useMemo, useTransition } from "react"
+import { useState, useTransition } from "react"
 import Link from "next/link"
 import { toast } from "sonner"
-import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, ArrowRight, CheckCircle2, List } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import { QuestionStatusBadge } from "@/components/QuestionStatusBadge"
 import { calculateQuestionScore, getQuestionStatus } from "@/lib/scoring"
-import { shuffleArray } from "@/lib/utils"
 import { useT } from "@/lib/i18n-client"
 import { saveAnswer } from "./actions"
 
@@ -45,10 +51,7 @@ interface Props {
 
 export function PracticeClient({ subject, questions, existingAnswers, userId }: Props) {
   const t = useT()
-  const shuffledQuestions = useMemo(
-    () => questions.map((q) => ({ ...q, answer_options: shuffleArray(q.answer_options) })),
-    [] // eslint-disable-line react-hooks/exhaustive-deps
-  )
+  const shuffledQuestions = questions
 
   const [currentIndex, setCurrentIndex] = useState(() => {
     const firstUnanswered = shuffledQuestions.findIndex((q) => !existingAnswers[q.id])
@@ -68,6 +71,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
     }
     return map
   })
+  const [sheetOpen, setSheetOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   const question = shuffledQuestions[currentIndex]
@@ -116,6 +120,11 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
     if (currentIndex > 0) setCurrentIndex((i) => i - 1)
   }
 
+  function jumpTo(index: number) {
+    setCurrentIndex(index)
+    setSheetOpen(false)
+  }
+
   const totalAnswered = Object.keys(submitted).length
   const totalCorrect = shuffledQuestions.filter((q) => {
     const s = submitted[q.id]
@@ -125,8 +134,41 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
     return getQuestionStatus(sel, corr) === "correct"
   }).length
 
+  function QuestionList() {
+    return (
+      <div className="flex flex-col gap-1 overflow-y-auto flex-1 pr-1">
+        {shuffledQuestions.map((q, i) => {
+          const sel = localAnswers[q.id] ?? []
+          const corr = q.answer_options.filter((o) => o.is_correct).map((o) => o.id)
+          const s = submitted[q.id] ? getQuestionStatus(sel, corr) : "unanswered"
+          const isCurrent = i === currentIndex
+
+          return (
+            <button
+              key={q.id}
+              onClick={() => jumpTo(i)}
+              className={`flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors w-full ${isCurrent
+                ? "bg-accent text-accent-foreground font-medium"
+                : "hover:bg-muted text-muted-foreground"
+                }`}
+            >
+              <span className="shrink-0 w-5 text-xs font-mono">{i + 1}.</span>
+              <span className="truncate flex-1">{q.question_text.slice(0, 40)}…</span>
+              <span className="shrink-0 text-base leading-none">
+                {s === "correct" && <span className="text-green-600">✓</span>}
+                {s === "partial" && <span className="text-yellow-600">~</span>}
+                {s === "wrong" && <span className="text-red-500">✗</span>}
+                {s === "unanswered" && <span className="text-muted-foreground/40">·</span>}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
+
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col overflow-hidden h-[calc(100dvh-4rem)] md:h-dvh">
       {/* Header */}
       <div className="border-b px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -138,22 +180,46 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
           <span className="font-semibold text-sm">{subject.icon ?? "📚"} {subject.name}</span>
         </div>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>{totalAnswered}/{shuffledQuestions.length} {t.answered_label}</span>
+          <span className="hidden sm:inline">{totalAnswered}/{shuffledQuestions.length} {t.answered_label}</span>
           {totalAnswered > 0 && (
-            <Badge variant="success">{totalCorrect} {t.correct_label}</Badge>
+            <Badge variant="success" className="hidden sm:inline-flex">{totalCorrect} {t.correct_label}</Badge>
           )}
+          {/* Questions list button — always visible */}
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <List className="h-4 w-4" />
+                <span className="hidden sm:inline">{t.practice_questions_btn}</span>
+                <span className="text-xs text-muted-foreground font-normal">
+                  {totalAnswered}/{shuffledQuestions.length}
+                </span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72 sm:w-80 flex flex-col p-0">
+              <SheetHeader className="px-4 py-3 border-b shrink-0">
+                <SheetTitle className="text-sm">{t.practice_all_questions}</SheetTitle>
+                <div className="flex flex-col gap-2 text-xs text-muted-foreground mt-1">
+                  <span className="flex items-center gap-1"><span className="text-green-600 font-bold">✓</span> {t.correct_label}</span>
+                  <span className="flex items-center gap-1"><span className="text-yellow-600 font-bold">~</span> {t.test_partial}</span>
+                  <span className="flex items-center gap-1"><span className="text-red-500 font-bold">✗</span> {t.test_incorrect}</span>
+                  <span className="flex items-center gap-1"><span className="text-muted-foreground/40 font-bold">·</span> {t.practice_unanswered}</span>
+                </div>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto p-3">
+                <QuestionList />
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Question list sidebar */}
+        {/* Question list sidebar — large screens only */}
         <div className="hidden lg:flex w-56 flex-col border-r overflow-y-auto p-3 gap-1">
           {shuffledQuestions.map((q, i) => {
             const sel = localAnswers[q.id] ?? []
             const corr = q.answer_options.filter((o) => o.is_correct).map((o) => o.id)
-            const s = submitted[q.id]
-              ? getQuestionStatus(sel, corr)
-              : "unanswered"
+            const s = submitted[q.id] ? getQuestionStatus(sel, corr) : "unanswered"
             return (
               <button
                 key={q.id}
@@ -256,18 +322,15 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
 
               <div className="flex gap-2">
                 {!isSubmitted && (
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={isPending}
-                  >
+                  <Button onClick={handleSubmit} disabled={isPending}>
                     <CheckCircle2 className="h-4 w-4 me-1" />
                     {t.confirm_answer}
                   </Button>
                 )}
               </div>
+
               {currentIndex < shuffledQuestions.length - 1 && (
                 <Button variant={isSubmitted ? "default" : "outline"} onClick={handleNext}>
-
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               )}
