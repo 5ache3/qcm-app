@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useRef, useEffect } from "react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { ArrowLeft, ArrowRight, CheckCircle2, List } from "lucide-react"
@@ -73,6 +73,16 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
   })
   const [sheetOpen, setSheetOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const activeSheetItemRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!sheetOpen) return
+    // Wait one frame for the sheet DOM to render before scrolling
+    const id = requestAnimationFrame(() => {
+      activeSheetItemRef.current?.scrollIntoView({ block: "center", behavior: "instant" })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [sheetOpen])
 
   const question = shuffledQuestions[currentIndex]
   const correctIds = question.answer_options.filter((o) => o.is_correct).map((o) => o.id)
@@ -146,6 +156,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
           return (
             <button
               key={q.id}
+              ref={isCurrent ? activeSheetItemRef : null}
               onClick={() => jumpTo(i)}
               className={`flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors w-full ${isCurrent
                 ? "bg-accent text-accent-foreground font-medium"
