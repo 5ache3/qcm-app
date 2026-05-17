@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { QuestionStatusBadge } from "@/components/QuestionStatusBadge"
 import { calculateQuestionScore, getQuestionStatus } from "@/lib/scoring"
 import { shuffleArray } from "@/lib/utils"
+import { useT } from "@/lib/i18n-client"
 import { saveAnswer } from "./actions"
 
 interface AnswerOption {
@@ -43,8 +44,7 @@ interface Props {
 }
 
 export function PracticeClient({ subject, questions, existingAnswers, userId }: Props) {
-  // Shuffle options once on mount (client-side) so order is truly random
-  // and not subject to server-side caching.
+  const t = useT()
   const shuffledQuestions = useMemo(
     () => questions.map((q) => ({ ...q, answer_options: shuffleArray(q.answer_options) })),
     [] // eslint-disable-line react-hooks/exhaustive-deps
@@ -104,7 +104,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
         score,
         status: questionStatus === "unanswered" ? "wrong" : questionStatus,
       })
-      if (!result.success) toast.error("Échec de la sauvegarde de la réponse")
+      if (!result.success) toast.error(t.save_error_toast)
     })
   }
 
@@ -138,9 +138,9 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
           <span className="font-semibold text-sm">{subject.icon ?? "📚"} {subject.name}</span>
         </div>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>{totalAnswered}/{shuffledQuestions.length} répondu(e)s</span>
+          <span>{totalAnswered}/{shuffledQuestions.length} {t.answered_label}</span>
           {totalAnswered > 0 && (
-            <Badge variant="success">{totalCorrect} correct{totalCorrect > 1 ? "s" : ""}</Badge>
+            <Badge variant="success">{totalCorrect} {t.correct_label}</Badge>
           )}
         </div>
       </div>
@@ -180,7 +180,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
           <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                Question {currentIndex + 1} sur {shuffledQuestions.length}
+                Q{currentIndex + 1} {t.question_of} {shuffledQuestions.length}
               </span>
               <div className="flex items-center gap-2">
                 {question.difficulty && (
@@ -196,7 +196,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
               <CardHeader>
                 <p className="font-medium leading-relaxed">{question.question_text}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Sélectionnez toutes les réponses correctes
+                  {t.select_all_correct}
                 </p>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -238,7 +238,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
               <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800">
                 <CardContent className="pt-4">
                   <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
-                    Explication
+                    {t.explanation_label}
                   </p>
                   <p className="text-sm text-blue-700 dark:text-blue-300">{question.explanation}</p>
                 </CardContent>
@@ -260,8 +260,8 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
                     onClick={handleSubmit}
                     disabled={isPending}
                   >
-                    <CheckCircle2 className="h-4 w-4 mr-1" />
-                    Confirmer la réponse
+                    <CheckCircle2 className="h-4 w-4 me-1" />
+                    {t.confirm_answer}
                   </Button>
                 )}
               </div>

@@ -18,6 +18,8 @@ import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useT } from "@/lib/i18n-client"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 import type { User } from "@supabase/supabase-js"
 
 interface Profile {
@@ -30,25 +32,27 @@ interface AppSidebarProps {
   profile: Profile | null
 }
 
-const studentNav = [
-  { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/subjects", label: "Matières", icon: BookMarked },
-  { href: "/mistakes", label: "Erreurs", icon: AlertCircle },
-  { href: "/profile", label: "Profil", icon: UserCircle },
-]
-
-const adminNav = [
-  { href: "/admin", label: "Vue d'ensemble", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Utilisateurs", icon: Users },
-  { href: "/admin/subjects", label: "Matières", icon: BookMarked },
-  { href: "/admin/questions", label: "Questions", icon: ClipboardList },
-  { href: "/admin/analytics", label: "Statistiques", icon: BarChart2 },
-]
-
 export function AppSidebar({ user, profile }: AppSidebarProps) {
+  const t = useT()
   const pathname = usePathname()
   const router = useRouter()
   const isAdmin = profile?.role === "admin"
+
+  const studentNav = [
+    { href: "/dashboard", label: t.nav_dashboard, icon: LayoutDashboard },
+    { href: "/subjects", label: t.nav_subjects, icon: BookMarked },
+    { href: "/mistakes", label: t.nav_mistakes, icon: AlertCircle },
+    { href: "/profile", label: t.nav_profile, icon: UserCircle },
+  ]
+
+  const adminNav = [
+    { href: "/admin", label: t.nav_overview, icon: LayoutDashboard },
+    { href: "/admin/users", label: t.nav_users, icon: Users },
+    { href: "/admin/subjects", label: t.nav_subjects, icon: BookMarked },
+    { href: "/admin/questions", label: t.nav_questions, icon: ClipboardList },
+    { href: "/admin/analytics", label: t.nav_analytics, icon: BarChart2 },
+  ]
+
   const navItems = isAdmin ? adminNav : studentNav
   const initials = profile?.full_name
     ?.split(" ")
@@ -60,7 +64,7 @@ export function AppSidebar({ user, profile }: AppSidebarProps) {
   async function handleSignOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    toast.success("Déconnecté")
+    toast.success(t.signed_out_toast)
     router.push("/login")
     router.refresh()
   }
@@ -92,7 +96,7 @@ export function AppSidebar({ user, profile }: AppSidebarProps) {
         ))}
       </nav>
 
-      <div className="border-t p-3">
+      <div className="border-t p-3 space-y-1">
         <div className="flex items-center gap-3 rounded-lg px-3 py-2">
           <Avatar className="h-8 w-8">
             <AvatarFallback className="text-xs">{initials}</AvatarFallback>
@@ -104,14 +108,15 @@ export function AppSidebar({ user, profile }: AppSidebarProps) {
             <p className="text-xs text-muted-foreground capitalize">{profile?.role ?? "student"}</p>
           </div>
         </div>
+        <LanguageSwitcher />
         <Button
           variant="ghost"
           size="sm"
-          className="mt-1 w-full justify-start gap-3 text-muted-foreground"
+          className="w-full justify-start gap-3 text-muted-foreground"
           onClick={handleSignOut}
         >
           <LogOut className="h-4 w-4" />
-          Se déconnecter
+          {t.sign_out}
         </Button>
       </div>
     </aside>

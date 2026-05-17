@@ -12,28 +12,31 @@ import {
   BarChart2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-const studentNav = [
-  { href: "/dashboard", label: "Accueil", icon: LayoutDashboard },
-  { href: "/subjects", label: "Matières", icon: BookMarked },
-  { href: "/mistakes", label: "Erreurs", icon: AlertCircle },
-  { href: "/profile", label: "Profil", icon: UserCircle },
-]
-
-const adminNav = [
-  { href: "/admin", label: "Vue d'ensemble", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Utilisateurs", icon: Users },
-  { href: "/admin/subjects", label: "Matières", icon: BookMarked },
-  { href: "/admin/questions", label: "Questions", icon: ClipboardList },
-  { href: "/admin/analytics", label: "Statistiques", icon: BarChart2 },
-]
+import { useT } from "@/lib/i18n-client"
 
 interface Props {
   isAdmin: boolean
 }
 
 export function MobileNav({ isAdmin }: Props) {
+  const t = useT()
   const pathname = usePathname()
+
+  const studentNav = [
+    { href: "/dashboard", label: t.nav_home, icon: LayoutDashboard },
+    { href: "/subjects", label: t.nav_subjects, icon: BookMarked },
+    { href: "/mistakes", label: t.nav_mistakes, icon: AlertCircle },
+    { href: "/profile", label: t.nav_profile, icon: UserCircle },
+  ]
+
+  const adminNav = [
+    { href: "/admin", label: t.nav_overview, icon: LayoutDashboard },
+    { href: "/admin/users", label: t.nav_users, icon: Users },
+    { href: "/admin/subjects", label: t.nav_subjects, icon: BookMarked },
+    { href: "/admin/questions", label: t.nav_questions, icon: ClipboardList },
+    { href: "/admin/analytics", label: t.nav_analytics, icon: BarChart2 },
+  ]
+
   const navItems = isAdmin ? adminNav : studentNav
 
   return (

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { getServerT } from "@/lib/i18n"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { BookOpen, Timer, History, ArrowLeft } from "lucide-react"
@@ -12,7 +13,7 @@ interface Props {
 
 export default async function SubjectPage({ params }: Props) {
   const { subjectId } = await params
-  const supabase = await createClient()
+  const [supabase, { t, lang }] = await Promise.all([createClient(), getServerT()])
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -45,8 +46,8 @@ export default async function SubjectPage({ params }: Props) {
   const correct = answers?.filter((a) => a.status === "correct").length ?? 0
   const partial = answers?.filter((a) => a.status === "partial").length ?? 0
   const wrong = answers?.filter((a) => a.status === "wrong").length ?? 0
-  const unanswered = (questionCount ?? 0) - answered
   const canTakeTest = (questionCount ?? 0) >= 20
+  const locale = lang === "ar" ? "ar-MA" : "fr-FR"
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
@@ -54,7 +55,7 @@ export default async function SubjectPage({ params }: Props) {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/subjects">
             <ArrowLeft className="h-4 w-4" />
-            Matières
+            {t.nav_subjects}
           </Link>
         </Button>
       </div>
@@ -73,11 +74,11 @@ export default async function SubjectPage({ params }: Props) {
 
       <div className="grid grid-cols-2 gap-3 xs:grid-cols-2 sm:grid-cols-4">
         {[
-          { label: "Questions", value: questionCount ?? 0, variant: "outline" as const },
-          { label: "Correct", value: correct, variant: "success" as const },
-          { label: "Partiel", value: partial, variant: "warning" as const },
-          { label: "Incorrect", value: wrong, variant: "error" as const },
-        ].map(({ label, value, variant }) => (
+          { label: t.nav_questions, value: questionCount ?? 0 },
+          { label: t.stat_correct, value: correct },
+          { label: t.stat_partial, value: partial },
+          { label: t.stat_incorrect, value: wrong },
+        ].map(({ label, value }) => (
           <Card key={label} className="text-center p-3">
             <div className="text-2xl font-bold">{value}</div>
             <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
@@ -90,7 +91,7 @@ export default async function SubjectPage({ params }: Props) {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <BookOpen className="h-4 w-4" />
-              Mode entraînement
+              {t.card_practice_title}
             </CardTitle>
             <CardDescription>
               Répondez aux questions une par une. Votre progression est sauvegardée automatiquement.
@@ -99,7 +100,7 @@ export default async function SubjectPage({ params }: Props) {
           <CardContent>
             <Button asChild className="w-full">
               <Link href={`/subjects/${subjectId}/practice`}>
-                {answered > 0 ? "Continuer l'entraînement" : "Commencer l'entraînement"}
+                {answered > 0 ? t.continue_practice : t.start_practice}
               </Link>
             </Button>
           </CardContent>
@@ -109,7 +110,7 @@ export default async function SubjectPage({ params }: Props) {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Timer className="h-4 w-4" />
-              Test chronométré
+              {t.card_test_title}
             </CardTitle>
             <CardDescription>
               20 questions aléatoires contre la montre. Score sauvegardé à la fin.
@@ -118,15 +119,15 @@ export default async function SubjectPage({ params }: Props) {
           <CardContent className="space-y-3">
             {canTakeTest ? (
               <Button asChild variant="outline" className="w-full">
-                <Link href={`/subjects/${subjectId}/test`}>Commencer le test</Link>
+                <Link href={`/subjects/${subjectId}/test`}>{t.start_test}</Link>
               </Button>
             ) : (
               <div className="space-y-2">
                 <Button disabled className="w-full" variant="outline">
-                  Commencer le test
+                  {t.start_test}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
-                  Il faut au moins 20 questions ({questionCount ?? 0} disponibles)
+                  {t.need_20_questions} ({questionCount ?? 0} disponibles)
                 </p>
               </div>
             )}
@@ -139,10 +140,10 @@ export default async function SubjectPage({ params }: Props) {
           <div className="flex items-center justify-between">
             <h2 className="font-semibold flex items-center gap-2">
               <History className="h-4 w-4" />
-              Tests récents
+              {t.recent_tests}
             </h2>
             <Button variant="ghost" size="sm" asChild>
-              <Link href={`/subjects/${subjectId}/tests`}>Voir tout</Link>
+              <Link href={`/subjects/${subjectId}/tests`}>{t.see_all}</Link>
             </Button>
           </div>
           <div className="space-y-2">
@@ -150,12 +151,12 @@ export default async function SubjectPage({ params }: Props) {
               <Link key={test.id} href={`/tests/${test.id}/review`}>
                 <div className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
                   <span className="text-sm text-muted-foreground">
-                    {new Date(test.started_at).toLocaleDateString("fr-FR", {
+                    {new Date(test.started_at).toLocaleDateString(locale, {
                       day: "numeric",
                       month: "short",
                       year: "numeric",
                     })}{" "}
-                    {new Date(test.started_at).toLocaleTimeString("fr-FR", {
+                    {new Date(test.started_at).toLocaleTimeString(locale, {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}

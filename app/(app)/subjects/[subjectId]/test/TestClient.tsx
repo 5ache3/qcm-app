@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { calculateQuestionScore, getQuestionStatus } from "@/lib/scoring"
 import type { QuestionStatus } from "@/lib/scoring"
 import { shuffleArray } from "@/lib/utils"
+import { useT } from "@/lib/i18n-client"
 import { startTest, submitTest } from "./actions"
 
 interface AnswerOption {
@@ -50,6 +51,7 @@ interface Props {
 }
 
 export function TestClient({ subject, questionCount, userId }: Props) {
+  const t = useT()
   const router = useRouter()
   const [phase, setPhase] = useState<Phase>("start")
   const [testData, setTestData] = useState<TestData | null>(null)
@@ -73,15 +75,15 @@ export function TestClient({ subject, questionCount, userId }: Props) {
       startTransition(async () => {
         try {
           const result = await submitTest(testData.testId, answerList, elapsed, expired)
-          if (expired) toast.info("Temps écoulé ! Votre test a été soumis.")
+          if (expired) toast.info(t.test_time_up_toast)
           router.push(`/tests/${result.testId}/review`)
         } catch {
-          toast.error("Échec de la soumission du test. Veuillez réessayer.")
+          toast.error(t.test_submit_fail_toast)
           setPhase("active")
         }
       })
     },
-    [testData, phase, secondsLeft, answers, router, startTransition]
+    [testData, phase, secondsLeft, answers, router, startTransition, t]
   )
 
   // Timer tick
@@ -132,8 +134,9 @@ export function TestClient({ subject, questionCount, userId }: Props) {
           })),
         })
         setPhase("active")
-      } catch (e: any) {
-        toast.error(e.message ?? "Échec du démarrage du test")
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : null
+        toast.error(msg ?? t.error_generic)
       }
     })
   }
@@ -170,26 +173,26 @@ export function TestClient({ subject, questionCount, userId }: Props) {
           </div>
           <div>
             <h1 className="text-2xl font-bold">{subject.name}</h1>
-            <p className="text-muted-foreground mt-1">Test chronométré</p>
+            <p className="text-muted-foreground mt-1">{t.card_test_title}</p>
           </div>
           <Card>
-            <CardContent className="pt-6 space-y-4 text-left">
-              {[
-                ["Questions", "20 questions aléatoires"],
-                ["Durée limite", "10 minutes"],
-                ["Notation", "Crédit partiel pour les réponses partielles"],
-                ["Après soumission", "Révision complète avec les bonnes réponses"],
-              ].map(([label, value]) => (
+            <CardContent className="pt-6 space-y-4 text-start">
+              {([
+                [t.nav_questions, t.test_random_questions],
+                [t.test_label_duration, t.test_time_limit],
+                [t.test_label_scoring, t.test_scoring],
+                [t.test_label_after_submit, t.test_after_submit],
+              ] as [string, string][]).map(([label, value]) => (
                 <div key={label} className="flex justify-between text-sm">
                   <span className="text-muted-foreground">{label}</span>
-                  <span className="font-medium">{value}</span>
+                  <span className="font-medium text-end">{value}</span>
                 </div>
               ))}
             </CardContent>
           </Card>
           {questionCount < 20 ? (
             <p className="text-sm text-destructive">
-              Pas assez de questions ({questionCount}/20 disponibles).
+              {t.test_not_enough.replace("{count}", String(questionCount))}
             </p>
           ) : (
             <Button
@@ -198,7 +201,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
               onClick={handleStart}
               disabled={isPending}
             >
-              {isPending ? "Préparation du test…" : "Commencer le test"}
+              {isPending ? t.test_preparing : t.test_start}
             </Button>
           )}
         </div>
@@ -263,8 +266,10 @@ export function TestClient({ subject, questionCount, userId }: Props) {
           disabled={phase === "submitting"}
           className="shrink-0 px-2 sm:px-3"
         >
-          <Flag className="h-3.5 w-3.5 sm:mr-1.5" />
-          <span className="hidden sm:inline">{phase === "submitting" ? "Soumission…" : "Soumettre le test"}</span>
+          <Flag className="h-3.5 w-3.5 sm:me-1.5" />
+          <span className="hidden sm:inline">
+            {phase === "submitting" ? t.test_submitting : t.test_submit_btn}
+          </span>
         </Button>
       </div>
 
@@ -302,7 +307,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
         <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
-              Question {currentIndex + 1}
+              Q{currentIndex + 1} {t.question_of} {testData.questions.length}
             </span>
             {question.difficulty && (
               <Badge variant="outline" className="text-xs capitalize">
@@ -316,7 +321,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
               <p className="font-medium leading-relaxed">{question.question_text}</p>
               {!isConfirmed && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Sélectionnez toutes les réponses correctes
+                  {t.select_all_correct}
                 </p>
               )}
             </CardHeader>
@@ -354,12 +359,12 @@ export function TestClient({ subject, questionCount, userId }: Props) {
                     <span className="flex-1 text-sm leading-relaxed">{option.option_text}</span>
                     {isConfirmed && option.is_correct && (
                       <span className="text-xs font-medium text-green-700 dark:text-green-400 shrink-0">
-                        ✓ correct
+                        ✓ {t.test_opt_correct}
                       </span>
                     )}
                     {isConfirmed && !option.is_correct && isSelected && (
                       <span className="text-xs font-medium text-red-600 dark:text-red-400 shrink-0">
-                        ✗ incorrect
+                        ✗ {t.test_opt_incorrect}
                       </span>
                     )}
                   </label>
@@ -373,8 +378,8 @@ export function TestClient({ subject, questionCount, userId }: Props) {
                   disabled={selected.length === 0}
                   onClick={() => confirmAnswer(question)}
                 >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Confirmer la réponse
+                  <CheckCircle2 className="h-4 w-4 me-2" />
+                  {t.test_confirm_answer}
                 </Button>
               ) : (
                 <div
@@ -387,9 +392,9 @@ export function TestClient({ subject, questionCount, userId }: Props) {
                   }`}
                 >
                   <span>
-                    {confirmedResult.status === "correct" && "Correct !"}
-                    {confirmedResult.status === "partial" && "Partiellement correct"}
-                    {confirmedResult.status === "wrong" && "Incorrect"}
+                    {confirmedResult.status === "correct" && t.test_correct}
+                    {confirmedResult.status === "partial" && t.test_partial}
+                    {confirmedResult.status === "wrong" && t.test_incorrect}
                   </span>
                   <span className="tabular-nums font-bold">
                     +{confirmedResult.score.toFixed(2)} pts
@@ -400,7 +405,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
               {/* Explanation (shown after confirm) */}
               {isConfirmed && question.explanation && (
                 <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 px-3 py-2">
-                  <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">Explication</p>
+                  <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">{t.explanation_label}</p>
                   <p className="text-xs text-blue-600 dark:text-blue-400">{question.explanation}</p>
                 </div>
               )}
@@ -413,8 +418,8 @@ export function TestClient({ subject, questionCount, userId }: Props) {
               onClick={() => setCurrentIndex((i) => i - 1)}
               disabled={currentIndex === 0}
             >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Précédent
+              <ArrowLeft className="h-4 w-4 me-1" />
+              {t.test_prev}
             </Button>
 
             {allConfirmed ? (
@@ -422,8 +427,8 @@ export function TestClient({ subject, questionCount, userId }: Props) {
                 onClick={() => handleSubmit(false)}
                 disabled={phase === "submitting"}
               >
-                <Flag className="h-4 w-4 mr-1" />
-                {phase === "submitting" ? "Soumission…" : "Terminer & soumettre"}
+                <Flag className="h-4 w-4 me-1" />
+                {phase === "submitting" ? t.test_submitting : t.test_finish}
               </Button>
             ) : (
               <Button
@@ -431,8 +436,8 @@ export function TestClient({ subject, questionCount, userId }: Props) {
                 disabled={nextUnansweredIndex === null}
                 variant={isConfirmed ? "default" : "outline"}
               >
-                Suivant
-                <ArrowRight className="h-4 w-4 ml-1" />
+                {t.test_next}
+                <ArrowRight className="h-4 w-4 ms-1" />
               </Button>
             )}
           </div>

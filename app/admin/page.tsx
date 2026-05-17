@@ -1,11 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
+import { getServerT } from "@/lib/i18n"
 import Link from "next/link"
 import { BookMarked, ClipboardList, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
 export default async function AdminPage() {
-  const supabase = await createClient()
+  const [supabase, { t }] = await Promise.all([createClient(), getServerT()])
 
   const [
     { count: subjectCount },
@@ -19,13 +20,13 @@ export default async function AdminPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Vue d&apos;ensemble</h1>
+      <h1 className="text-2xl font-bold">{t.admin_overview_title}</h1>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
-          { label: "Matières", value: subjectCount ?? 0, icon: BookMarked, href: "/admin/subjects" },
-          { label: "Questions", value: questionCount ?? 0, icon: ClipboardList, href: "/admin/questions" },
-          { label: "Utilisateurs", value: userCount ?? 0, icon: Users, href: "/admin/users" },
+          { label: t.admin_stat_subjects, value: subjectCount ?? 0, icon: BookMarked, href: "/admin/subjects" },
+          { label: t.admin_stat_questions, value: questionCount ?? 0, icon: ClipboardList, href: "/admin/questions" },
+          { label: t.admin_stat_students, value: userCount ?? 0, icon: Users, href: "/admin/users" },
         ].map(({ label, value, icon: Icon, href }) => (
           <Card key={label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -34,8 +35,8 @@ export default async function AdminPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="text-2xl font-bold">{value}</div>
-              <Button asChild variant="ghost" size="sm" className="-ml-2 text-xs">
-                <Link href={href}>Gérer →</Link>
+              <Button asChild variant="ghost" size="sm" className="-ms-2 text-xs">
+                <Link href={href}>{t.admin_manage}</Link>
               </Button>
             </CardContent>
           </Card>

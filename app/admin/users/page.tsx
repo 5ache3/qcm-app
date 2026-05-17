@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { getServerT } from "@/lib/i18n"
 import Link from "next/link"
 import { Users, ChevronLeft, ChevronRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -17,7 +18,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   const from = (page - 1) * PAGE_SIZE
   const to = from + PAGE_SIZE - 1
 
-  const supabase = await createClient()
+  const [supabase, { t, lang }] = await Promise.all([createClient(), getServerT()])
 
   const { data: profiles, count } = await supabase
     .from("profiles")
@@ -41,14 +42,16 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   ])
 
   const testCountMap: Record<string, number> = {}
-  for (const t of testCounts ?? []) {
-    testCountMap[t.user_id] = (testCountMap[t.user_id] ?? 0) + 1
+  for (const tc of testCounts ?? []) {
+    testCountMap[tc.user_id] = (testCountMap[tc.user_id] ?? 0) + 1
   }
 
   const practiceCountMap: Record<string, number> = {}
   for (const p of practiceCounts ?? []) {
     practiceCountMap[p.user_id] = (practiceCountMap[p.user_id] ?? 0) + 1
   }
+
+  const locale = lang === "ar" ? "ar-MA" : "fr-FR"
 
   if (!profiles || profiles.length === 0) {
     return (
@@ -62,8 +65,8 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Utilisateurs</h1>
-        <p className="text-muted-foreground mt-1">{count} inscrits</p>
+        <h1 className="text-2xl font-bold">{t.admin_users_title}</h1>
+        <p className="text-muted-foreground mt-1">{count} {t.admin_stat_students_count.toLowerCase()}</p>
       </div>
 
       <div className="space-y-2">
@@ -73,15 +76,15 @@ export default async function AdminUsersPage({ searchParams }: Props) {
               <CardContent className="flex items-center justify-between p-4">
                 <div className="space-y-0.5">
                   <p className="font-medium text-sm">
-                    {profile.full_name ?? <span className="text-muted-foreground italic">Aucun nom</span>}
+                    {profile.full_name ?? <span className="text-muted-foreground italic">{t.admin_no_name}</span>}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Inscrit le {new Date(profile.created_at).toLocaleDateString("fr-FR")}
+                    {t.admin_registered_on} {new Date(profile.created_at).toLocaleDateString(locale)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <span className="text-muted-foreground text-xs">
-                    {practiceCountMap[profile.id] ?? 0} réponses ·{" "}
+                    {practiceCountMap[profile.id] ?? 0} {t.admin_answers_label} ·{" "}
                     {testCountMap[profile.id] ?? 0} tests
                   </span>
                   <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
@@ -99,15 +102,15 @@ export default async function AdminUsersPage({ searchParams }: Props) {
           <Button variant="outline" size="sm" asChild disabled={page === 1}>
             <Link href={`/admin/users?page=${page - 1}`}>
               <ChevronLeft className="h-4 w-4" />
-              Précédent
+              {t.admin_prev}
             </Link>
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page {page} sur {totalPages}
+            {page} {t.admin_page_of} {totalPages}
           </span>
           <Button variant="outline" size="sm" asChild disabled={page >= totalPages}>
             <Link href={`/admin/users?page=${page + 1}`}>
-              Suivant
+              {t.admin_next}
               <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>

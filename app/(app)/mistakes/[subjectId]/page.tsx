@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
+import { getServerT } from "@/lib/i18n"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, BookOpen } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { QuestionStatusBadge } from "@/components/QuestionStatusBadge"
 
@@ -13,7 +13,7 @@ interface Props {
 
 export default async function SubjectMistakesPage({ params }: Props) {
   const { subjectId } = await params
-  const supabase = await createClient()
+  const [supabase, { t }] = await Promise.all([createClient(), getServerT()])
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -48,14 +48,14 @@ export default async function SubjectMistakesPage({ params }: Props) {
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/mistakes">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Toutes les matières
+            <ArrowLeft className="h-4 w-4 me-1" />
+            {t.all_subjects}
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
           <Link href={`/subjects/${subjectId}/practice`}>
-            <BookOpen className="h-3.5 w-3.5 mr-1.5" />
-            S&apos;entraîner
+            <BookOpen className="h-3.5 w-3.5 me-1.5" />
+            {t.practice_btn}
           </Link>
         </Button>
       </div>
@@ -65,7 +65,7 @@ export default async function SubjectMistakesPage({ params }: Props) {
         <div>
           <h1 className="text-2xl font-bold">{subject.name}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {answers?.length ?? 0} question{(answers?.length ?? 0) !== 1 ? "s" : ""} à revoir
+            {answers?.length ?? 0} {t.to_review_count}
           </p>
         </div>
       </div>
@@ -75,10 +75,10 @@ export default async function SubjectMistakesPage({ params }: Props) {
       ) : (
         <div className="space-y-3">
           {answers.map((ans) => {
-            const q = ans.questions as any
+            const q = ans.questions as unknown as { question_text: string; explanation: string | null; answer_options: { id: string; option_text: string; is_correct: boolean; position: number }[] }
             const selectedIds: string[] = ans.selected_option_ids
             const sortedOptions = [...(q.answer_options ?? [])].sort(
-              (a: any, b: any) => a.position - b.position
+              (a, b) => a.position - b.position
             )
 
             return (
@@ -88,12 +88,12 @@ export default async function SubjectMistakesPage({ params }: Props) {
                     <CardTitle className="text-sm font-medium leading-relaxed">
                       {q.question_text}
                     </CardTitle>
-                    <QuestionStatusBadge status={ans.status as any} />
+                    <QuestionStatusBadge status={ans.status as "correct" | "wrong" | "partial"} />
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
-                    {sortedOptions.map((opt: any) => {
+                    {sortedOptions.map((opt) => {
                       const isSelected = selectedIds.includes(opt.id)
                       const isCorrect = opt.is_correct
 
@@ -121,7 +121,7 @@ export default async function SubjectMistakesPage({ params }: Props) {
                   </div>
                   {q.explanation && (
                     <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 px-3 py-2 mt-1">
-                      <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">Explication</p>
+                      <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">{t.explanation_label}</p>
                       <p className="text-xs text-blue-600 dark:text-blue-400">{q.explanation}</p>
                     </div>
                   )}

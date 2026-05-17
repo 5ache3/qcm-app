@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useT } from "@/lib/i18n-client"
 
 export default function ResetPasswordPage() {
+  const t = useT()
   const router = useRouter()
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
@@ -21,7 +23,7 @@ export default function ResetPasswordPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (password !== confirm) {
-      toast.error("Les mots de passe ne correspondent pas")
+      toast.error(t.reset_mismatch)
       return
     }
     setLoading(true)
@@ -32,7 +34,7 @@ export default function ResetPasswordPage() {
       toast.error(error.message)
       return
     }
-    toast.success("Mot de passe mis à jour. Vous pouvez maintenant vous connecter.")
+    toast.success(t.reset_success_toast)
     router.push("/login")
   }
 
@@ -44,18 +46,20 @@ export default function ResetPasswordPage() {
             <BookOpen className="h-6 w-6" />
           </div>
           <h1 className="text-2xl font-bold">QCM Révision</h1>
-          <p className="text-sm text-muted-foreground">Définir un nouveau mot de passe</p>
+          <p className="text-sm text-muted-foreground">{t.reset_new_password}</p>
         </div>
 
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Nouveau mot de passe</CardTitle>
-            <CardDescription>Choisissez un mot de passe d&apos;au moins 6 caractères.</CardDescription>
+            <CardTitle className="text-lg">{t.reset_new_password}</CardTitle>
+            <CardDescription>
+              {t.login_password} — min. 6
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">Nouveau mot de passe</Label>
+                <Label htmlFor="password">{t.reset_new_password}</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -66,12 +70,12 @@ export default function ResetPasswordPage() {
                     required
                     minLength={6}
                     autoComplete="new-password"
-                    className="pr-10"
+                    className="pe-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -80,7 +84,7 @@ export default function ResetPasswordPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirm">Confirmer le mot de passe</Label>
+                <Label htmlFor="confirm">{t.reset_confirm_password}</Label>
                 <div className="relative">
                   <Input
                     id="confirm"
@@ -91,12 +95,12 @@ export default function ResetPasswordPage() {
                     required
                     minLength={6}
                     autoComplete="new-password"
-                    className="pr-10"
+                    className="pe-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirm((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     tabIndex={-1}
                   >
                     {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -105,7 +109,7 @@ export default function ResetPasswordPage() {
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Mise à jour…" : "Mettre à jour le mot de passe"}
+                {loading ? t.reset_loading : t.reset_submit}
               </Button>
             </form>
           </CardContent>

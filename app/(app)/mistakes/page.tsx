@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { getServerT } from "@/lib/i18n"
 import Link from "next/link"
 import { AlertCircle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -6,12 +7,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 export default async function MistakesPage() {
-  const supabase = await createClient()
+  const [supabase, { t }] = await Promise.all([createClient(), getServerT()])
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Get counts of wrong/partial answers per subject
   const { data: answers } = await supabase
     .from("practice_answers")
     .select("subject_id, status, subjects(id, name, icon)")
@@ -27,16 +27,15 @@ export default async function MistakesPage() {
           Les réponses incorrectes et partielles de l&apos;entraînement apparaîtront ici.
         </p>
         <Button asChild className="mt-4">
-          <Link href="/subjects">Commencer l&apos;entraînement</Link>
+          <Link href="/subjects">{t.start_practice}</Link>
         </Button>
       </div>
     )
   }
 
-  // Group by subject
   const bySubject = new Map<string, { subject: { id: string; name: string; icon: string | null }; wrong: number; partial: number }>()
   for (const a of answers) {
-    const sub = a.subjects as any
+    const sub = a.subjects as unknown as { id: string; name: string; icon: string | null }
     if (!bySubject.has(sub.id)) {
       bySubject.set(sub.id, { subject: sub, wrong: 0, partial: 0 })
     }
@@ -52,10 +51,9 @@ export default async function MistakesPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold">Erreurs</h1>
+        <h1 className="text-2xl font-bold">{t.mistakes_title}</h1>
         <p className="text-muted-foreground mt-1">
-          {answers.length} question{answers.length !== 1 ? "s" : ""} à revoir dans{" "}
-          {subjects.length} matière{subjects.length !== 1 ? "s" : ""}
+          {answers.length} {t.to_review_count} ({subjects.length} {t.nav_subjects.toLowerCase()})
         </p>
       </div>
 
@@ -70,10 +68,10 @@ export default async function MistakesPage() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {wrong > 0 && (
-                    <Badge variant="error">{wrong} incorrect{wrong > 1 ? "es" : "e"}</Badge>
+                    <Badge variant="error">{wrong} {t.stat_incorrect.toLowerCase()}</Badge>
                   )}
                   {partial > 0 && (
-                    <Badge variant="warning">{partial} partielle{partial > 1 ? "s" : ""}</Badge>
+                    <Badge variant="warning">{partial} {t.stat_partial.toLowerCase()}</Badge>
                   )}
                 </div>
               </CardContent>

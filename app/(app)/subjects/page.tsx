@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { getServerT } from "@/lib/i18n"
 import Link from "next/link"
 import { BookMarked, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -6,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 
 export default async function SubjectsPage() {
-  const supabase = await createClient()
+  const [supabase, { t }] = await Promise.all([createClient(), getServerT()])
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -23,7 +24,6 @@ export default async function SubjectsPage() {
 
   function getSubjectProgress(subjectId: string) {
     const answers = practiceAnswers?.filter((a) => a.subject_id === subjectId) ?? []
-    const total = subjects?.find((s) => s.id === subjectId) ? answers.length : 0
     const correct = answers.filter((a) => a.status === "correct").length
     return { answered: answers.length, correct }
   }
@@ -43,7 +43,7 @@ export default async function SubjectsPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Matières</h1>
+        <h1 className="text-2xl font-bold">{t.subjects_title}</h1>
         <p className="text-muted-foreground mt-1">Choisissez une matière pour vous entraîner ou vous tester.</p>
       </div>
 
@@ -75,13 +75,13 @@ export default async function SubjectsPage() {
                   {answered > 0 ? (
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{answered} répondu(e)s</span>
-                        <span>{progressPct}% correct</span>
+                        <span>{answered} {t.answered_label}</span>
+                        <span>{progressPct}% {t.stat_correct.toLowerCase()}</span>
                       </div>
                       <Progress value={progressPct} className="h-1.5" />
                     </div>
                   ) : (
-                    <Badge variant="muted" className="text-xs">Non commencé</Badge>
+                    <Badge variant="muted" className="text-xs">{t.not_started}</Badge>
                   )}
                 </CardContent>
               </Card>

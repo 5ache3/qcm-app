@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { getServerT } from "@/lib/i18n"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Clock, Trophy } from "lucide-react"
@@ -19,7 +20,7 @@ function formatDuration(seconds: number | null) {
 
 export default async function SubjectTestsPage({ params }: Props) {
   const { subjectId } = await params
-  const supabase = await createClient()
+  const [supabase, { t, lang }] = await Promise.all([createClient(), getServerT()])
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -40,6 +41,8 @@ export default async function SubjectTestsPage({ params }: Props) {
     .in("status", ["completed", "expired"])
     .order("started_at", { ascending: false })
 
+  const locale = lang === "ar" ? "ar-MA" : "fr-FR"
+
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
       <div className="flex items-center gap-2">
@@ -51,14 +54,14 @@ export default async function SubjectTestsPage({ params }: Props) {
         </Button>
       </div>
 
-      <h1 className="text-2xl font-bold">Historique des tests</h1>
+      <h1 className="text-2xl font-bold">{t.tests_title}</h1>
 
       {!tests || tests.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Trophy className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p>Aucun test complété pour l&apos;instant.</p>
+          <p>{t.tests_empty}</p>
           <Button asChild className="mt-4">
-            <Link href={`/subjects/${subjectId}/test`}>Passer un test</Link>
+            <Link href={`/subjects/${subjectId}/test`}>{t.start_test}</Link>
           </Button>
         </div>
       ) : (
@@ -71,13 +74,13 @@ export default async function SubjectTestsPage({ params }: Props) {
                   <CardContent className="flex items-center justify-between p-4">
                     <div className="space-y-1">
                       <p className="text-sm font-medium">
-                        {new Date(test.started_at).toLocaleDateString("fr-FR", {
+                        {new Date(test.started_at).toLocaleDateString(locale, {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
                         })}{" "}
                         <span className="text-muted-foreground font-normal">
-                          {new Date(test.started_at).toLocaleTimeString("fr-FR", {
+                          {new Date(test.started_at).toLocaleTimeString(locale, {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
@@ -90,7 +93,7 @@ export default async function SubjectTestsPage({ params }: Props) {
                         </span>
                         <span>{(test.score ?? 0).toFixed(2)} pts</span>
                         {test.status === "expired" && (
-                          <Badge variant="warning" className="text-xs">Expiré</Badge>
+                          <Badge variant="warning" className="text-xs">{t.test_expired}</Badge>
                         )}
                       </div>
                     </div>

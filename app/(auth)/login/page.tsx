@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useT } from "@/lib/i18n-client"
 
 type Mode = "signin" | "signup" | "forgot"
 
@@ -20,6 +21,7 @@ function friendlyAuthError(msg: string): string {
 }
 
 export default function LoginPage() {
+  const t = useT()
   const router = useRouter()
   const [mode, setMode] = useState<Mode>("signin")
   const [fullName, setFullName] = useState("")
@@ -41,7 +43,7 @@ export default function LoginPage() {
       if (error) {
         toast.error(friendlyAuthError(error.message))
       } else {
-        toast.success("Vérifiez votre e-mail pour le lien de réinitialisation.")
+        toast.success(t.login_reset_sent_toast)
         setMode("signin")
         setEmail("")
       }
@@ -68,7 +70,7 @@ export default function LoginPage() {
         setLoading(false)
         return
       }
-      toast.success("Compte créé ! Vous pouvez maintenant vous connecter.")
+      toast.success(t.login_signup_success_toast)
       setMode("signin")
       setPassword("")
       setLoading(false)
@@ -83,10 +85,15 @@ export default function LoginPage() {
   }
 
   const titles: Record<Mode, { title: string; description: string }> = {
-    signin: { title: "Se connecter", description: "Saisissez votre e-mail et votre mot de passe" },
-    signup: { title: "Créer un compte", description: "Remplissez vos informations pour commencer" },
-    forgot: { title: "Réinitialiser le mot de passe", description: "Nous vous enverrons un lien par e-mail" },
+    signin: { title: t.login_title_signin, description: t.login_desc_signin },
+    signup: { title: t.login_title_signup, description: t.login_desc_signup },
+    forgot: { title: t.login_title_forgot, description: t.login_desc_forgot },
   }
+
+  const appSubtitle =
+    mode === "signin" ? t.login_app_subtitle_signin
+    : mode === "signup" ? t.login_app_subtitle_signup
+    : t.login_app_subtitle_forgot
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
@@ -96,9 +103,7 @@ export default function LoginPage() {
             <BookOpen className="h-6 w-6" />
           </div>
           <h1 className="text-2xl font-bold">QCM Révision</h1>
-          <p className="text-sm text-muted-foreground">
-            {mode === "signin" ? "Connectez-vous à votre compte" : mode === "signup" ? "Créez un nouveau compte" : "Mot de passe oublié ?"}
-          </p>
+          <p className="text-sm text-muted-foreground">{appSubtitle}</p>
         </div>
 
         <Card>
@@ -110,11 +115,11 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "signup" && (
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Nom complet</Label>
+                  <Label htmlFor="fullName">{t.login_full_name}</Label>
                   <Input
                     id="fullName"
                     type="text"
-                    placeholder="Votre nom"
+                    placeholder={t.login_your_name}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
@@ -124,7 +129,7 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
+                <Label htmlFor="email">{t.login_email}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -138,7 +143,7 @@ export default function LoginPage() {
 
               {mode !== "forgot" && (
                 <div className="space-y-2">
-                  <Label htmlFor="password">Mot de passe</Label>
+                  <Label htmlFor="password">{t.login_password}</Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -149,25 +154,25 @@ export default function LoginPage() {
                       required
                       minLength={6}
                       autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                      className="pr-10"
+                      className="pe-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {mode === "signin" && (
-                    <div className="text-right">
+                    <div className="text-end">
                       <button
                         type="button"
                         onClick={() => switchMode("forgot")}
                         className="text-xs text-muted-foreground hover:text-foreground hover:underline transition-colors"
                       >
-                        Mot de passe oublié ?
+                        {t.login_forgot_link}
                       </button>
                     </div>
                   )}
@@ -176,24 +181,24 @@ export default function LoginPage() {
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading
-                  ? mode === "signin" ? "Connexion…" : mode === "signup" ? "Création du compte…" : "Envoi du lien…"
-                  : mode === "signin" ? "Se connecter" : mode === "signup" ? "Créer un compte" : "Envoyer le lien"}
+                  ? mode === "signin" ? t.login_loading_signin : mode === "signup" ? t.login_loading_signup : t.login_loading_forgot
+                  : mode === "signin" ? t.login_btn_signin : mode === "signup" ? t.login_btn_signup : t.login_btn_forgot}
               </Button>
             </form>
 
             <div className="mt-4 text-center text-sm text-muted-foreground">
               {mode === "signin" ? (
                 <>
-                  Pas encore de compte ?{" "}
+                  {t.login_no_account}{" "}
                   <button type="button" onClick={() => switchMode("signup")} className="font-medium text-foreground hover:underline">
-                    S&apos;inscrire
+                    {t.login_signup_link}
                   </button>
                 </>
               ) : (
                 <>
-                  Déjà un compte ?{" "}
+                  {t.login_have_account}{" "}
                   <button type="button" onClick={() => switchMode("signin")} className="font-medium text-foreground hover:underline">
-                    Se connecter
+                    {t.login_signin_link}
                   </button>
                 </>
               )}

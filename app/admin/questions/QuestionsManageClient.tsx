@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useT } from "@/lib/i18n-client"
 import {
   getQuestionsForSubject,
   updateQuestion,
@@ -43,6 +44,7 @@ const SELECT_CLASS =
   "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 
 export function QuestionsManageClient({ subjects }: Props) {
+  const t = useT()
   const [selectedSubjectId, setSelectedSubjectId] = useState("")
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(false)
@@ -118,7 +120,7 @@ export function QuestionsManageClient({ subjects }: Props) {
         difficulty: editingQuestion.difficulty || null,
       })
       if (res?.error) { toast.error(res.error); return }
-      toast.success("Question sauvegardée")
+      toast.success(t.admin_question_updated_toast)
       setQuestions((prev) =>
         prev.map((q) =>
           q.id === editingQuestion.id
@@ -136,11 +138,11 @@ export function QuestionsManageClient({ subjects }: Props) {
   }
 
   function handleDeleteQuestion(questionId: string) {
-    if (!confirm("Supprimer cette question et toutes ses options ?")) return
+    if (!confirm(t.admin_delete_question_confirm)) return
     startTransition(async () => {
       const res = await deleteQuestion(questionId)
       if (res?.error) { toast.error(res.error); return }
-      toast.success("Question supprimée")
+      toast.success(t.admin_question_deleted_toast)
       setQuestions((prev) => prev.filter((q) => q.id !== questionId))
     })
   }
@@ -158,7 +160,7 @@ export function QuestionsManageClient({ subjects }: Props) {
         is_correct: editingOption.is_correct,
       })
       if (res?.error) { toast.error(res.error); return }
-      toast.success("Option sauvegardée")
+      toast.success(t.admin_question_updated_toast)
       setQuestions((prev) =>
         prev.map((q) =>
           q.id === questionId
@@ -208,7 +210,7 @@ export function QuestionsManageClient({ subjects }: Props) {
   }
 
   function handleCreateQuestion() {
-    if (!newQ.question_text.trim()) { toast.error("Le texte de la question est obligatoire"); return }
+    if (!newQ.question_text.trim()) { toast.error(t.admin_question_text_label + " obligatoire"); return }
     const validOptions = newQOptions.filter((o) => o.option_text.trim())
     if (!validOptions.some((o) => o.is_correct)) { toast.error("Au moins une option correcte est requise"); return }
     startTransition(async () => {
@@ -219,7 +221,7 @@ export function QuestionsManageClient({ subjects }: Props) {
         options: validOptions,
       })
       if (res?.error) { toast.error(res.error); return }
-      toast.success("Question créée")
+      toast.success(t.admin_question_created_toast)
       setCreatingQuestion(false)
       setNewQ({ question_text: "", explanation: "", difficulty: "" })
       setNewQOptions([
@@ -234,9 +236,8 @@ export function QuestionsManageClient({ subjects }: Props) {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      {/* Subject selector */}
       <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sélectionner une matière</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t.admin_questions_select_subject}</p>
         {subjects.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             Aucune matière.{" "}
@@ -277,19 +278,18 @@ export function QuestionsManageClient({ subjects }: Props) {
                 setEditingQuestion(null)
               }}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle question
+              <Plus className="h-4 w-4 me-2" />
+              {t.admin_new_question}
             </Button>
           </div>
 
           {loading && <p className="text-sm text-muted-foreground">Chargement…</p>}
 
-          {/* Create question form */}
           {creatingQuestion && (
             <Card className="border-primary/50">
               <CardContent className="pt-4 space-y-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Texte de la question *</Label>
+                  <Label className="text-xs">{t.admin_question_text_label} *</Label>
                   <textarea
                     className={TEXTAREA_CLASS}
                     placeholder="Saisir la question…"
@@ -299,7 +299,7 @@ export function QuestionsManageClient({ subjects }: Props) {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">Explication</Label>
+                    <Label className="text-xs">{t.admin_explanation_label}</Label>
                     <Input
                       placeholder="Optionnel"
                       value={newQ.explanation}
@@ -307,21 +307,21 @@ export function QuestionsManageClient({ subjects }: Props) {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Difficulté</Label>
+                    <Label className="text-xs">{t.admin_difficulty_label}</Label>
                     <select
                       className={SELECT_CLASS}
                       value={newQ.difficulty}
                       onChange={(e) => setNewQ((prev) => ({ ...prev, difficulty: e.target.value }))}
                     >
-                      <option value="">Aucune</option>
-                      {DIFFICULTIES.map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
+                      <option value="">{t.admin_diff_none}</option>
+                      <option value="easy">{t.admin_diff_easy}</option>
+                      <option value="medium">{t.admin_diff_medium}</option>
+                      <option value="hard">{t.admin_diff_hard}</option>
                     </select>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Options — cochez les correctes</Label>
+                  <Label className="text-xs">{t.admin_options_title}</Label>
                   {newQOptions.map((opt, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <Checkbox
@@ -358,16 +358,16 @@ export function QuestionsManageClient({ subjects }: Props) {
                       setNewQOptions((prev) => [...prev, { option_text: "", is_correct: false }])
                     }
                   >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Ajouter une option
+                    <Plus className="h-4 w-4 me-1" />
+                    {t.admin_add_option}
                   </Button>
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" disabled={isPending} onClick={handleCreateQuestion}>
-                    {isPending ? "Sauvegarde…" : "Créer la question"}
+                    {isPending ? "…" : t.admin_create_question}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setCreatingQuestion(false)}>
-                    Annuler
+                    {t.admin_cancel}
                   </Button>
                 </div>
               </CardContent>
@@ -469,7 +469,7 @@ export function QuestionsManageClient({ subjects }: Props) {
                         {isEditingThis && (
                           <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1">
-                              <Label className="text-xs">Explication</Label>
+                              <Label className="text-xs">{t.admin_explanation_label}</Label>
                               <Input
                                 placeholder="Optionnel"
                                 value={editingQuestion.explanation}
@@ -481,7 +481,7 @@ export function QuestionsManageClient({ subjects }: Props) {
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-xs">Difficulté</Label>
+                              <Label className="text-xs">{t.admin_difficulty_label}</Label>
                               <select
                                 className={SELECT_CLASS}
                                 value={editingQuestion.difficulty}
@@ -491,10 +491,10 @@ export function QuestionsManageClient({ subjects }: Props) {
                                   )
                                 }
                               >
-                                <option value="">Aucune</option>
-                                {DIFFICULTIES.map((d) => (
-                                  <option key={d} value={d}>{d}</option>
-                                ))}
+                                <option value="">{t.admin_diff_none}</option>
+                                <option value="easy">{t.admin_diff_easy}</option>
+                                <option value="medium">{t.admin_diff_medium}</option>
+                                <option value="hard">{t.admin_diff_hard}</option>
                               </select>
                             </div>
                           </div>
@@ -504,10 +504,9 @@ export function QuestionsManageClient({ subjects }: Props) {
                           <p className="text-xs text-muted-foreground italic">{q.explanation}</p>
                         )}
 
-                        {/* Options */}
                         <div className="space-y-1.5">
                           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            Options
+                            {t.admin_options_title}
                           </p>
                           {sortedOptions.map((opt) => {
                             const isEditingOpt = editingOption?.id === opt.id
@@ -637,8 +636,8 @@ export function QuestionsManageClient({ subjects }: Props) {
                                 setNewOption({ questionId: q.id, option_text: "", is_correct: false })
                               }
                             >
-                              <Plus className="h-3 w-3 mr-1" />
-                              Ajouter une option
+                              <Plus className="h-3 w-3 me-1" />
+                              {t.admin_add_option}
                             </Button>
                           )}
                         </div>
@@ -650,7 +649,6 @@ export function QuestionsManageClient({ subjects }: Props) {
             })}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 pt-2">
               <Button
@@ -659,10 +657,10 @@ export function QuestionsManageClient({ subjects }: Props) {
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
               >
-                Précédent
+                {t.admin_prev}
               </Button>
               <span className="text-sm text-muted-foreground">
-                {page} / {totalPages}
+                {page} {t.admin_page_of} {totalPages}
               </span>
               <Button
                 variant="outline"
@@ -670,14 +668,14 @@ export function QuestionsManageClient({ subjects }: Props) {
                 disabled={page === totalPages}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Suivant
+                {t.admin_next}
               </Button>
             </div>
           )}
 
           {!loading && questions.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">
-              Aucune question. Importez-en ou créez-en une ci-dessus.
+              {t.admin_no_questions}
             </p>
           )}
         </div>

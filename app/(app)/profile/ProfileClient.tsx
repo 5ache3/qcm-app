@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { User, KeyRound, LogOut } from "lucide-react"
+import { User, KeyRound, LogOut, Languages } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { createClient } from "@/lib/supabase/client"
+import { useT } from "@/lib/i18n-client"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 import { updateProfile, sendPasswordReset } from "./actions"
 
 interface Props {
@@ -20,6 +22,7 @@ interface Props {
 }
 
 export function ProfileClient({ email, fullName, role }: Props) {
+  const t = useT()
   const router = useRouter()
   const [name, setName] = useState(fullName)
   const [isPending, startTransition] = useTransition()
@@ -28,17 +31,17 @@ export function ProfileClient({ email, fullName, role }: Props) {
   async function handleSignOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    toast.success("Déconnecté")
+    toast.success(t.signed_out_toast)
     router.push("/login")
     router.refresh()
   }
 
   function handleSave() {
-    if (!name.trim()) { toast.error("Le nom ne peut pas être vide"); return }
+    if (!name.trim()) { toast.error(t.profile_name_empty_toast); return }
     startTransition(async () => {
       const res = await updateProfile({ full_name: name.trim() })
       if (res?.error) { toast.error(res.error); return }
-      toast.success("Profil mis à jour")
+      toast.success(t.profile_saved_toast)
     })
   }
 
@@ -47,14 +50,14 @@ export function ProfileClient({ email, fullName, role }: Props) {
       const res = await sendPasswordReset()
       if (res?.error) { toast.error(res.error); return }
       setResetSent(true)
-      toast.success("E-mail de réinitialisation envoyé")
+      toast.success(t.profile_reset_sent_toast)
     })
   }
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-md">
       <div>
-        <h1 className="text-2xl font-bold">Profil</h1>
+        <h1 className="text-2xl font-bold">{t.profile_title}</h1>
         <p className="text-muted-foreground text-sm mt-0.5">{email}</p>
       </div>
 
@@ -62,28 +65,28 @@ export function ProfileClient({ email, fullName, role }: Props) {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <User className="h-4 w-4" />
-            Détails du compte
+            {t.profile_account}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="full_name">Nom d&apos;affichage</Label>
+            <Label htmlFor="full_name">{t.profile_display_name}</Label>
             <Input
               id="full_name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Votre nom"
+              placeholder={t.profile_your_name}
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
             />
           </div>
           <div className="flex items-center gap-3">
-            <Label>Rôle</Label>
+            <Label>{t.profile_role}</Label>
             <Badge variant={role === "admin" ? "default" : "secondary"} className="capitalize">
               {role}
             </Badge>
           </div>
           <Button disabled={isPending || name === fullName} onClick={handleSave}>
-            {isPending ? "Sauvegarde…" : "Sauvegarder"}
+            {isPending ? t.profile_saving : t.profile_save}
           </Button>
         </CardContent>
       </Card>
@@ -92,20 +95,33 @@ export function ProfileClient({ email, fullName, role }: Props) {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <KeyRound className="h-4 w-4" />
-            Mot de passe
+            {t.profile_password_title}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-3">
-            Nous enverrons un lien de réinitialisation à <span className="font-medium text-foreground">{email}</span>.
+            {t.profile_password_desc} <span className="font-medium text-foreground">{email}</span>.
           </p>
           <Button
             variant="outline"
             disabled={isPending || resetSent}
             onClick={handlePasswordReset}
           >
-            {resetSent ? "E-mail envoyé" : "Envoyer l'e-mail de réinitialisation"}
+            {resetSent ? t.profile_reset_sent : t.profile_send_reset}
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Language switcher — visible on mobile where sidebar is hidden */}
+      <Card className="md:hidden">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Languages className="h-4 w-4" />
+            Langue / اللغة
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <LanguageSwitcher />
         </CardContent>
       </Card>
 
@@ -116,8 +132,8 @@ export function ProfileClient({ email, fullName, role }: Props) {
         className="w-full"
         onClick={handleSignOut}
       >
-        <LogOut className="h-4 w-4 mr-2" />
-        Se déconnecter
+        <LogOut className="h-4 w-4 me-2" />
+        {t.sign_out}
       </Button>
     </div>
   )

@@ -6,6 +6,7 @@ import { Upload, FileText, AlertCircle, CheckCircle2, Download } from "lucide-re
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useT } from "@/lib/i18n-client"
 import { parseCSV } from "./parseCSV"
 import { parseJSON } from "./parseJSON"
 import { importQuestions } from "./actions"
@@ -68,6 +69,7 @@ function downloadSample(format: "csv" | "json") {
 }
 
 export function QuestionsImportClient({ subjects }: Props) {
+  const t = useT()
   const [selectedSubject, setSelectedSubject] = useState("")
   const [preview, setPreview] = useState<ParsedQuestion[] | null>(null)
   const [parseErrors, setParseErrors] = useState<string[]>([])
@@ -96,13 +98,13 @@ export function QuestionsImportClient({ subjects }: Props) {
     startTransition(async () => {
       try {
         const result = await importQuestions(selectedSubject, preview)
-        toast.success(`${result.imported} question${result.imported !== 1 ? "s" : ""} importée${result.imported !== 1 ? "s" : ""}`)
+        toast.success(`${result.imported} ${t.admin_import_success_toast}`)
         setPreview(null)
         setParseErrors([])
         setDetectedFormat(null)
         if (fileRef.current) fileRef.current.value = ""
       } catch {
-        toast.error("Échec de l'importation")
+        toast.error(t.admin_import_fail_toast)
       }
     })
   }
@@ -110,31 +112,30 @@ export function QuestionsImportClient({ subjects }: Props) {
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="font-semibold">Importer des questions</h2>
+        <h2 className="font-semibold">{t.admin_import_heading}</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => downloadSample("csv")}>
-            <Download className="h-4 w-4 mr-2" />
-            Exemple CSV
+            <Download className="h-4 w-4 me-2" />
+            {t.admin_sample_csv}
           </Button>
           <Button variant="outline" size="sm" onClick={() => downloadSample("json")}>
-            <Download className="h-4 w-4 mr-2" />
-            Exemple JSON
+            <Download className="h-4 w-4 me-2" />
+            {t.admin_sample_json}
           </Button>
         </div>
       </div>
 
-      {/* Format guides */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card className="bg-muted/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Format CSV
+              {t.admin_format_csv_title}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground space-y-1">
-            <p>Obligatoire : <code className="bg-muted px-1 rounded">question_text</code></p>
-            <p>Optionnel : <code className="bg-muted px-1 rounded">explanation</code> <code className="bg-muted px-1 rounded">difficulty</code></p>
+            <p>{t.admin_csv_required} <code className="bg-muted px-1 rounded">question_text</code></p>
+            <p>{t.admin_csv_optional} <code className="bg-muted px-1 rounded">explanation</code> <code className="bg-muted px-1 rounded">difficulty</code></p>
             <p className="font-mono bg-muted p-1.5 rounded mt-1">
               option_1, correct_1, option_2, correct_2 …
             </p>
@@ -145,12 +146,12 @@ export function QuestionsImportClient({ subjects }: Props) {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Format JSON
+              {t.admin_format_json_title}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground space-y-1">
-            <p>Tableau d&apos;objets avec <code className="bg-muted px-1 rounded">question_text</code></p>
-            <p>Tableau d&apos;options : <code className="bg-muted px-1 rounded">text</code> + <code className="bg-muted px-1 rounded">correct</code></p>
+            <p>{t.admin_json_desc} <code className="bg-muted px-1 rounded">question_text</code></p>
+            <p>{t.admin_json_options_desc} <code className="bg-muted px-1 rounded">text</code> + <code className="bg-muted px-1 rounded">correct</code></p>
             <p className="font-mono bg-muted p-1.5 rounded mt-1">
               {"[{ question_text, options: [{ text, correct }] }]"}
             </p>
@@ -158,9 +159,8 @@ export function QuestionsImportClient({ subjects }: Props) {
         </Card>
       </div>
 
-      {/* Step 1 — Pick subject */}
       <div className="space-y-3">
-        <h2 className="font-semibold">1. Sélectionner la matière</h2>
+        <h2 className="font-semibold">{t.admin_import_step1}</h2>
         {subjects.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             Aucune matière.{" "}
@@ -186,9 +186,8 @@ export function QuestionsImportClient({ subjects }: Props) {
         )}
       </div>
 
-      {/* Step 2 — Upload file */}
       <div className="space-y-3">
-        <h2 className="font-semibold">2. Téléverser un fichier</h2>
+        <h2 className="font-semibold">{t.admin_import_step2}</h2>
         <label
           className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
             selectedSubject
@@ -198,15 +197,13 @@ export function QuestionsImportClient({ subjects }: Props) {
           onClick={(e) => {
             if (!selectedSubject) {
               e.preventDefault()
-              toast.warning("Sélectionnez d'abord une matière (étape 1)")
+              toast.warning(t.admin_no_subject_warning)
             }
           }}
         >
           <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-          <span className="text-sm font-medium">Cliquer pour téléverser un CSV ou JSON</span>
-          <span className="text-xs text-muted-foreground mt-1">
-            .csv ou .json — encodé en UTF-8
-          </span>
+          <span className="text-sm font-medium">{t.admin_upload_prompt}</span>
+          <span className="text-xs text-muted-foreground mt-1">{t.admin_upload_sub}</span>
           {detectedFormat && (
             <Badge variant="secondary" className="mt-2 text-xs">
               {detectedFormat.toUpperCase()} détecté
@@ -223,13 +220,12 @@ export function QuestionsImportClient({ subjects }: Props) {
         </label>
       </div>
 
-      {/* Parse errors */}
       {parseErrors.length > 0 && (
         <Card className="border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20">
           <CardContent className="pt-4 space-y-1">
             <p className="text-sm font-medium flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
               <AlertCircle className="h-4 w-4" />
-              {parseErrors.length} avertissement{parseErrors.length > 1 ? "s" : ""}
+              {parseErrors.length} {parseErrors.length > 1 ? t.admin_warnings_many : t.admin_warnings_one}
             </p>
             <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-0.5 list-disc list-inside">
               {parseErrors.map((e, i) => <li key={i}>{e}</li>)}
@@ -238,21 +234,20 @@ export function QuestionsImportClient({ subjects }: Props) {
         </Card>
       )}
 
-      {/* Preview */}
       {preview && preview.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold flex items-center gap-2">
-              3. Aperçu &amp; importation
-              <Badge variant="secondary">{preview.length} questions</Badge>
+              {t.admin_import_step3}
+              <Badge variant="secondary">{preview.length} {t.nav_questions.toLowerCase()}</Badge>
             </h2>
             <Button onClick={handleImport} disabled={isPending || !selectedSubject}>
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-              {isPending ? "Importation…" : `Importer ${preview.length} question${preview.length !== 1 ? "s" : ""}`}
+              <CheckCircle2 className="h-4 w-4 me-2" />
+              {isPending ? t.admin_import_loading : `${t.admin_import_btn} ${preview.length}`}
             </Button>
           </div>
 
-          <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-96 overflow-y-auto pe-1">
             {preview.map((q, i) => (
               <Card key={i} className="text-sm">
                 <CardContent className="pt-3 pb-3 space-y-2">

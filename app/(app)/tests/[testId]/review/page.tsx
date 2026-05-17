@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { getServerT } from "@/lib/i18n"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Clock, Trophy } from "lucide-react"
@@ -22,7 +23,7 @@ function formatDuration(seconds: number | null) {
 
 export default async function TestReviewPage({ params }: Props) {
   const { testId } = await params
-  const supabase = await createClient()
+  const [supabase, { t, lang }] = await Promise.all([createClient(), getServerT()])
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -63,8 +64,8 @@ export default async function TestReviewPage({ params }: Props) {
     (testAnswers ?? []).map((a) => [a.question_id, a])
   )
 
-  const subject = test.subjects as any
   const pct = test.percentage ?? 0
+  const locale = lang === "ar" ? "ar-MA" : "fr-FR"
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
@@ -72,12 +73,11 @@ export default async function TestReviewPage({ params }: Props) {
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/subjects/${test.subject_id}`}>
             <ArrowLeft className="h-4 w-4" />
-            Retour
+            {t.review_back}
           </Link>
         </Button>
       </div>
 
-      {/* Score card */}
       <Card
         className={
           pct >= 80
@@ -101,32 +101,31 @@ export default async function TestReviewPage({ params }: Props) {
               {formatDuration(test.duration_seconds)}
             </span>
             <span>
-              {new Date(test.started_at).toLocaleDateString("fr-FR", {
+              {new Date(test.started_at).toLocaleDateString(locale, {
                 day: "numeric",
                 month: "short",
                 year: "numeric",
               })}{" "}
-              {new Date(test.started_at).toLocaleTimeString("fr-FR", {
+              {new Date(test.started_at).toLocaleTimeString(locale, {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
             </span>
             {test.status === "expired" && (
-              <Badge variant="error">Temps expiré</Badge>
+              <Badge variant="error">{t.review_time_expired}</Badge>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Per-question review */}
       <div className="space-y-4">
-        <h2 className="font-semibold text-lg">Révision des questions</h2>
+        <h2 className="font-semibold text-lg">{t.review_title}</h2>
         {testQuestions.map((tq) => {
-          const q = tq.questions as any
+          const q = tq.questions as unknown as { question_text: string; explanation: string | null; answer_options: { id: string; option_text: string; is_correct: boolean; position: number }[] }
           const answer = answerMap.get(tq.question_id)
           const selectedIds: string[] = answer?.selected_option_ids ?? []
           const status = (answer?.status ?? "unanswered") as QuestionStatus
-          const sortedOptions = [...(q.answer_options ?? [])].sort((a: any, b: any) => a.position - b.position)
+          const sortedOptions = [...(q.answer_options ?? [])].sort((a, b) => a.position - b.position)
 
           return (
             <Card key={tq.question_id}>
@@ -149,7 +148,7 @@ export default async function TestReviewPage({ params }: Props) {
                 </div>
               </CardHeader>
               <CardContent className="space-y-2">
-                {sortedOptions.map((option: any) => {
+                {sortedOptions.map((option) => {
                   const isSelected = selectedIds.includes(option.id)
                   const isCorrect = option.is_correct
 
@@ -176,7 +175,7 @@ export default async function TestReviewPage({ params }: Props) {
                 })}
                 {q.explanation && (
                   <div className="mt-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 px-3 py-2">
-                    <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">Explication</p>
+                    <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">{t.explanation_label}</p>
                     <p className="text-xs text-blue-600 dark:text-blue-400">{q.explanation}</p>
                   </div>
                 )}
@@ -189,10 +188,10 @@ export default async function TestReviewPage({ params }: Props) {
       <Separator />
       <div className="flex gap-3 pb-6">
         <Button asChild variant="outline">
-          <Link href={`/subjects/${test.subject_id}`}>Retour à la matière</Link>
+          <Link href={`/subjects/${test.subject_id}`}>{t.review_back_subject}</Link>
         </Button>
         <Button asChild>
-          <Link href={`/subjects/${test.subject_id}/test`}>Repasser le test</Link>
+          <Link href={`/subjects/${test.subject_id}/test`}>{t.review_retake}</Link>
         </Button>
       </div>
     </div>

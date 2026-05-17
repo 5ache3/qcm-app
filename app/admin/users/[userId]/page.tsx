@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server"
+import { getServerT } from "@/lib/i18n"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Trophy, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 
@@ -13,7 +14,7 @@ interface Props {
 
 export default async function AdminUserDetailPage({ params }: Props) {
   const { userId } = await params
-  const supabase = await createClient()
+  const [supabase, { t, lang }] = await Promise.all([createClient(), getServerT()])
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -44,7 +45,6 @@ export default async function AdminUserDetailPage({ params }: Props) {
 
   const subjectMap = new Map((subjects ?? []).map((s) => [s.id, s]))
 
-  // Per-subject practice stats
   const practiceBySubject = new Map<string, { total: number; correct: number; partial: number; wrong: number }>()
   for (const a of practiceAnswers ?? []) {
     if (!practiceBySubject.has(a.subject_id)) {
@@ -62,8 +62,10 @@ export default async function AdminUserDetailPage({ params }: Props) {
   const completedTests = tests?.length ?? 0
   const avgScore =
     completedTests > 0
-      ? (tests!.reduce((sum, t) => sum + (t.percentage ?? 0), 0) / completedTests).toFixed(1)
+      ? (tests!.reduce((sum, test) => sum + (test.percentage ?? 0), 0) / completedTests).toFixed(1)
       : null
+
+  const locale = lang === "ar" ? "ar-MA" : "fr-FR"
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
@@ -71,16 +73,16 @@ export default async function AdminUserDetailPage({ params }: Props) {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/admin/users">
             <ArrowLeft className="h-4 w-4" />
-            Utilisateurs
+            {t.admin_users_title}
           </Link>
         </Button>
       </div>
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{profile.full_name ?? "Utilisateur sans nom"}</h1>
+          <h1 className="text-2xl font-bold">{profile.full_name ?? t.admin_no_name}</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
-            Inscrit le {new Date(profile.created_at).toLocaleDateString("fr-FR")}
+            {t.admin_registered_on} {new Date(profile.created_at).toLocaleDateString(locale)}
           </p>
         </div>
         <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
@@ -88,13 +90,12 @@ export default async function AdminUserDetailPage({ params }: Props) {
         </Badge>
       </div>
 
-      {/* Summary stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "Répondu", value: totalAnswered },
-          { label: "Correct", value: totalCorrect },
-          { label: "Tests passés", value: completedTests },
-          { label: "Score moyen", value: avgScore ? `${avgScore}%` : "—" },
+          { label: t.answered_label, value: totalAnswered },
+          { label: t.stat_correct, value: totalCorrect },
+          { label: t.stat_tests_completed, value: completedTests },
+          { label: t.admin_avg_test_label, value: avgScore ? `${avgScore}%` : "—" },
         ].map(({ label, value }) => (
           <Card key={label} className="text-center p-3">
             <div className="text-2xl font-bold">{value}</div>
@@ -103,12 +104,11 @@ export default async function AdminUserDetailPage({ params }: Props) {
         ))}
       </div>
 
-      {/* Per-subject practice */}
       {practiceBySubject.size > 0 && (
         <div className="space-y-3">
           <h2 className="font-semibold flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
-            Entraînement par matière
+            {t.admin_user_practice_by_subject}
           </h2>
           <div className="space-y-3">
             {Array.from(practiceBySubject.entries()).map(([subjectId, stats]) => {
@@ -118,7 +118,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
                 <div key={subjectId} className="space-y-1.5">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">
-                      {subject?.icon ?? "📚"} {subject?.name ?? "Inconnu"}
+                      {subject?.icon ?? "📚"} {subject?.name ?? t.admin_user_unknown}
                     </span>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="text-green-600">{stats.correct} ✓</span>
@@ -135,12 +135,11 @@ export default async function AdminUserDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* Recent tests */}
       {tests && tests.length > 0 && (
         <div className="space-y-3">
           <h2 className="font-semibold flex items-center gap-2">
             <Trophy className="h-4 w-4" />
-            Tests récents
+            {t.admin_user_recent_tests}
           </h2>
           <div className="space-y-2">
             {tests.map((test) => {
@@ -151,10 +150,10 @@ export default async function AdminUserDetailPage({ params }: Props) {
                   <div className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
                     <div>
                       <p className="text-sm font-medium">
-                        {subject?.icon ?? "📚"} {subject?.name ?? "Inconnu"}
+                        {subject?.icon ?? "📚"} {subject?.name ?? t.admin_user_unknown}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(test.started_at).toLocaleDateString("fr-FR")}
+                        {new Date(test.started_at).toLocaleDateString(locale)}
                       </p>
                     </div>
                     <Badge variant={pct >= 80 ? "success" : pct >= 50 ? "warning" : "error"}>
@@ -170,7 +169,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
 
       {totalAnswered === 0 && completedTests === 0 && (
         <p className="text-sm text-muted-foreground text-center py-8">
-          Cet utilisateur n&apos;a pas encore répondu à des questions.
+          {t.admin_user_no_answers}
         </p>
       )}
     </div>

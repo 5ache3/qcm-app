@@ -1,11 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
-import { BookMarked, ClipboardList, Trophy, AlertCircle } from "lucide-react"
+import { getServerT } from "@/lib/i18n"
+import { BookMarked, ClipboardList, Trophy } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  const [supabase, { t }] = await Promise.all([createClient(), getServerT()])
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -25,19 +26,19 @@ export default async function DashboardPage() {
       .eq("status", "completed"),
   ])
 
-  const firstName = profile?.full_name?.split(" ")[0] ?? "there"
+  const firstName = profile?.full_name?.split(" ")[0] ?? ""
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Bonjour, {firstName} 👋</h1>
-        <p className="text-muted-foreground mt-1">Prêt à réviser ? Reprenez là où vous vous êtes arrêté.</p>
+        <h1 className="text-2xl font-bold">{t.dashboard_greeting}{firstName ? `, ${firstName}` : ""} 👋</h1>
+        <p className="text-muted-foreground mt-1">{t.dashboard_subtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Matières</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.stat_subjects}</CardTitle>
             <BookMarked className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -46,7 +47,7 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Tests complétés</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t.stat_tests_completed}</CardTitle>
             <ClipboardList className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -60,15 +61,13 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <BookMarked className="h-5 w-5" />
-              Mode entraînement
+              {t.card_practice_title}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex-1 space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Parcourez toutes les questions d&apos;une matière et sauvegardez vos réponses. Suivez lesquelles sont correctes, incorrectes ou partielles.
-            </p>
+            <p className="text-sm text-muted-foreground">{t.card_practice_desc}</p>
             <Button asChild className="mt-4">
-              <Link href="/subjects">Choisir une matière</Link>
+              <Link href="/subjects">{t.choose_subject}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -77,15 +76,13 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Trophy className="h-5 w-5" />
-              Test chronométré
+              {t.card_test_title}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex-1 space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Passez un test de 20 questions aléatoires contre la montre. Obtenez un score et révisez chaque réponse ensuite.
-            </p>
+            <p className="text-sm text-muted-foreground">{t.card_test_desc}</p>
             <Button asChild variant="outline" className="mt-4">
-              <Link href="/subjects">Choisir une matière</Link>
+              <Link href="/subjects">{t.choose_subject}</Link>
             </Button>
           </CardContent>
         </Card>
