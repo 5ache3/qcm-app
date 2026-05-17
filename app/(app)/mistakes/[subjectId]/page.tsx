@@ -6,6 +6,8 @@ import { ArrowLeft, BookOpen } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { QuestionStatusBadge } from "@/components/QuestionStatusBadge"
+import { ExportMistakesButton } from "@/components/ExportMistakesButton"
+import type { MistakeItem } from "@/components/MistakesPDFDocument"
 
 interface Props {
   params: Promise<{ subjectId: string }>
@@ -43,6 +45,22 @@ export default async function SubjectMistakesPage({ params }: Props) {
 
   if (!subject) notFound()
 
+  const pdfMistakes: MistakeItem[] = (answers ?? []).map((ans) => {
+    const q = ans.questions as unknown as {
+      question_text: string
+      explanation: string | null
+      answer_options: { id: string; option_text: string; is_correct: boolean; position: number }[]
+    }
+    return {
+      question_id: ans.question_id,
+      status: ans.status as "wrong" | "partial",
+      selected_option_ids: ans.selected_option_ids as string[],
+      question_text: q.question_text,
+      explanation: q.explanation,
+      answer_options: q.answer_options ?? [],
+    }
+  })
+
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
       <div className="flex items-center justify-between">
@@ -52,12 +70,15 @@ export default async function SubjectMistakesPage({ params }: Props) {
             {t.all_subjects}
           </Link>
         </Button>
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/subjects/${subjectId}/practice`}>
-            <BookOpen className="h-3.5 w-3.5 me-1.5" />
-            {t.practice_btn}
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <ExportMistakesButton subjectName={subject.name} mistakes={pdfMistakes} />
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/subjects/${subjectId}/practice`}>
+              <BookOpen className="h-3.5 w-3.5 me-1.5" />
+              {t.practice_btn}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
