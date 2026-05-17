@@ -343,7 +343,7 @@ const fr: Dict = {
 
   // Test
   test_random_questions: "20 questions aléatoires",
-  test_time_limit: "10 minutes",
+  test_time_limit: "20 minutes",
   test_scoring: "Crédit partiel pour les réponses partielles",
   test_after_submit: "Révision complète avec les bonnes réponses",
   test_label_duration: "Durée limite",
@@ -591,7 +591,7 @@ const ar: Dict = {
 
   // Test
   test_random_questions: "20 سؤالاً عشوائياً",
-  test_time_limit: "10 دقائق",
+  test_time_limit: "20 دقيقة",
   test_scoring: "نقاط جزئية للإجابات الجزئية",
   test_after_submit: "مراجعة كاملة مع الإجابات الصحيحة",
   test_label_duration: "المدة الزمنية",

@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { calculateQuestionScore, getQuestionStatus } from "@/lib/scoring"
 
-const TEST_DURATION_SECONDS = 10 * 60 // 10 minutes
+const TEST_DURATION_SECONDS = 20 * 60 // 20 minutes
 
 export async function startTest(subjectId: string) {
   const supabase = await createClient()
