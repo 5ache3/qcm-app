@@ -6,7 +6,7 @@ export default async function AdminSubjectsPage() {
 
   const { data: subjects } = await supabase
     .from("subjects")
-    .select("id, name, description, icon, created_at")
+    .select("id, name, description, icon, due_date, created_at")
     .order("name")
 
   const { data: counts } = await supabase

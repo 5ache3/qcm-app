@@ -13,6 +13,7 @@ export interface Subject {
   name: string
   description: string | null
   icon: string | null
+  due_date: string | null
   created_at: string
 }
 

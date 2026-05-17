@@ -1,10 +1,33 @@
 import { createClient } from "@/lib/supabase/server"
 import { getServerT } from "@/lib/i18n"
 import Link from "next/link"
-import { BookMarked, ChevronRight } from "lucide-react"
+import { BookMarked, ChevronRight, Calendar } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+
+function sortSubjectsByDueDate<T extends { due_date: string | null }>(subjects: T[]): T[] {
+  const today = new Date()
+  today.setHours(12, 0, 0, 0)
+
+  return [...subjects].sort((a, b) => {
+    const da = a.due_date ? new Date(a.due_date + "T12:00:00") : null
+    const db = b.due_date ? new Date(b.due_date + "T12:00:00") : null
+    const aPast = da ? da < today : false
+    const bPast = db ? db < today : false
+
+    // past due → bottom
+    if (aPast !== bPast) return aPast ? 1 : -1
+    // both upcoming with date → soonest first
+    if (da && db && !aPast && !bPast) return da.getTime() - db.getTime()
+    // no date → after upcoming, before past
+    if (!da && !db) return 0
+    if (!da) return 1
+    if (!db) return -1
+    // both past → most recently expired first
+    return db.getTime() - da.getTime()
+  })
+}
 
 export default async function SubjectsPage() {
   const [supabase, { t }] = await Promise.all([createClient(), getServerT()])
@@ -12,10 +35,11 @@ export default async function SubjectsPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: subjects } = await supabase
+  const { data: rawSubjects } = await supabase
     .from("subjects")
-    .select("id, name, description, icon, questions!inner(id)")
-    .order("name")
+    .select("id, name, description, icon, due_date, questions!inner(id)")
+
+  const subjects = sortSubjectsByDueDate(rawSubjects ?? [])
 
   const { data: practiceAnswers } = await supabase
     .from("practice_answers")
@@ -28,7 +52,7 @@ export default async function SubjectsPage() {
     return { answered: answers.length, correct }
   }
 
-  if (!subjects || subjects.length === 0) {
+  if (subjects.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
         <BookMarked className="h-12 w-12 text-muted-foreground mb-4" />
@@ -52,9 +76,15 @@ export default async function SubjectsPage() {
           const { answered, correct } = getSubjectProgress(subject.id)
           const progressPct = answered > 0 ? Math.round((correct / answered) * 100) : 0
 
+          const today = new Date()
+          today.setHours(12, 0, 0, 0)
+          const dueDate = subject.due_date ? new Date(subject.due_date + "T12:00:00") : null
+          const isPastDue = dueDate ? dueDate < today : false
+          const daysUntilDue = dueDate ? Math.round((dueDate.getTime() - today.getTime()) / 86400000) : null
+
           return (
             <Link key={subject.id} href={`/subjects/${subject.id}`}>
-              <Card className="h-full hover:shadow-md transition-shadow cursor-pointer group">
+              <Card className={`h-full hover:shadow-md transition-shadow cursor-pointer group ${isPastDue ? "opacity-60" : ""}`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -71,6 +101,24 @@ export default async function SubjectsPage() {
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {subject.description}
                     </p>
+                  )}
+                  {dueDate && (
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-3 w-3 text-muted-foreground" />
+                      {isPastDue ? (
+                        <span className="text-xs text-destructive font-medium">
+                          Expiré le {dueDate.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                        </span>
+                      ) : daysUntilDue === 0 ? (
+                        <span className="text-xs text-orange-500 font-medium">Aujourd&apos;hui</span>
+                      ) : daysUntilDue === 1 ? (
+                        <span className="text-xs text-orange-500 font-medium">Demain</span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          Dans {daysUntilDue} jours — {dueDate.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                        </span>
+                      )}
+                    </div>
                   )}
                   {answered > 0 ? (
                     <div className="space-y-1">

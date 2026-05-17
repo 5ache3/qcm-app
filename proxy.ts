@@ -39,6 +39,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
+  if (user && !pathname.startsWith("/profile") && !pathname.startsWith("/api")) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("status")
+      .eq("id", user.id)
+      .single()
+
+    if (profile?.status === "pending") {
+      return NextResponse.redirect(new URL("/profile", request.url))
+    }
+  }
+
   return supabaseResponse
 }
 

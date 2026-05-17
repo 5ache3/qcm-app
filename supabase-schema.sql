@@ -16,6 +16,7 @@ create table if not exists subjects (
   name        text not null,
   description text,
   icon        text,
+  due_date    date,
   created_at  timestamptz not null default now()
 );
 

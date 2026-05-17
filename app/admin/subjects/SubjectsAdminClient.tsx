@@ -9,13 +9,14 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useT } from "@/lib/i18n-client"
-import { createSubject, deleteSubject } from "./actions"
+import { createSubject, deleteSubject, updateSubjectDueDate } from "./actions"
 
 interface Subject {
   id: string
   name: string
   description: string | null
   icon: string | null
+  due_date: string | null
   created_at: string
 }
 
@@ -24,9 +25,26 @@ interface Props {
   questionCountMap: Record<string, number>
 }
 
+function sortByDueDate(subjects: Subject[]): Subject[] {
+  const today = new Date()
+  today.setHours(12, 0, 0, 0)
+  return [...subjects].sort((a, b) => {
+    const da = a.due_date ? new Date(a.due_date + "T12:00:00") : null
+    const db = b.due_date ? new Date(b.due_date + "T12:00:00") : null
+    const aPast = da ? da < today : false
+    const bPast = db ? db < today : false
+    if (aPast !== bPast) return aPast ? 1 : -1
+    if (da && db && !aPast && !bPast) return da.getTime() - db.getTime()
+    if (!da && !db) return 0
+    if (!da) return 1
+    if (!db) return -1
+    return db.getTime() - da.getTime()
+  })
+}
+
 export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Props) {
   const t = useT()
-  const [subjects, setSubjects] = useState(initial)
+  const [subjects, setSubjects] = useState(() => sortByDueDate(initial))
   const [showForm, setShowForm] = useState(false)
   const [isPending, startTransition] = useTransition()
 
@@ -40,6 +58,20 @@ export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Pro
       toast.success(t.admin_create_toast)
       setShowForm(false)
       window.location.reload()
+    })
+  }
+
+  function handleDueDateChange(id: string, value: string) {
+    startTransition(async () => {
+      const result = await updateSubjectDueDate(id, value || null)
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      setSubjects((prev) =>
+        sortByDueDate(prev.map((s) => (s.id === id ? { ...s, due_date: value || null } : s)))
+      )
+      toast.success("Date limite mise à jour")
     })
   }
 
@@ -87,6 +119,10 @@ export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Pro
                 <Label htmlFor="description">Description</Label>
                 <Input id="description" name="description" placeholder="Courte description (optionnelle)" />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="due_date">Date limite (optionnelle)</Label>
+                <Input id="due_date" name="due_date" type="date" />
+              </div>
               <Button type="submit" disabled={isPending}>
                 {isPending ? "…" : t.admin_create_btn}
               </Button>
@@ -117,6 +153,20 @@ export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Pro
                 </div>
               </div>
               <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor={`due-${subject.id}`} className="text-xs text-muted-foreground whitespace-nowrap">
+                    Date limite
+                  </Label>
+                  <Input
+                    id={`due-${subject.id}`}
+                    type="date"
+                    className="h-7 w-36 text-xs cursor-pointer"
+                    defaultValue={subject.due_date ?? ""}
+                    disabled={isPending}
+                    onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                    onChange={(e) => handleDueDateChange(subject.id, e.target.value)}
+                  />
+                </div>
                 <Badge variant="outline">
                   {questionCountMap[subject.id] ?? 0} {t.nav_questions.toLowerCase()}
                 </Badge>
