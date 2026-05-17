@@ -3,14 +3,21 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { BookOpen } from "lucide-react"
+import { BookOpen, Eye, EyeOff } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-type Mode = "signin" | "signup"
+type Mode = "signin" | "signup" | "forgot"
+
+function friendlyAuthError(msg: string): string {
+  if (msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("over_email")) {
+    return "Too many emails sent recently. Please wait a few minutes and try again."
+  }
+  return msg
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -18,12 +25,28 @@ export default function LoginPage() {
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     const supabase = createClient()
+
+    if (mode === "forgot") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+      setLoading(false)
+      if (error) {
+        toast.error(friendlyAuthError(error.message))
+      } else {
+        toast.success("Check your email for a reset link.")
+        setMode("signin")
+        setEmail("")
+      }
+      return
+    }
 
     if (mode === "signin") {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -41,7 +64,7 @@ export default function LoginPage() {
         options: { data: { full_name: fullName.trim() } },
       })
       if (error) {
-        toast.error(error.message)
+        toast.error(friendlyAuthError(error.message))
         setLoading(false)
         return
       }
@@ -56,6 +79,13 @@ export default function LoginPage() {
     setMode(next)
     setFullName("")
     setPassword("")
+    setShowPassword(false)
+  }
+
+  const titles: Record<Mode, { title: string; description: string }> = {
+    signin: { title: "Sign in", description: "Enter your email and password" },
+    signup: { title: "Create account", description: "Fill in your details to get started" },
+    forgot: { title: "Reset password", description: "We'll send a reset link to your email" },
   }
 
   return (
@@ -67,20 +97,14 @@ export default function LoginPage() {
           </div>
           <h1 className="text-2xl font-bold">QCM Revision</h1>
           <p className="text-sm text-muted-foreground">
-            {mode === "signin" ? "Sign in to your account" : "Create a new account"}
+            {mode === "signin" ? "Sign in to your account" : mode === "signup" ? "Create a new account" : "Forgot your password?"}
           </p>
         </div>
 
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg">
-              {mode === "signin" ? "Sign in" : "Create account"}
-            </CardTitle>
-            <CardDescription>
-              {mode === "signin"
-                ? "Enter your email and password"
-                : "Fill in your details to get started"}
-            </CardDescription>
+            <CardTitle className="text-lg">{titles[mode].title}</CardTitle>
+            <CardDescription>{titles[mode].description}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -98,6 +122,7 @@ export default function LoginPage() {
                   />
                 </div>
               )}
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -110,23 +135,49 @@ export default function LoginPage() {
                   autoComplete="email"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                />
-              </div>
+
+              {mode !== "forgot" && (
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {mode === "signin" && (
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        onClick={() => switchMode("forgot")}
+                        className="text-xs text-muted-foreground hover:text-foreground hover:underline transition-colors"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading
-                  ? mode === "signin" ? "Signing in…" : "Creating account…"
-                  : mode === "signin" ? "Sign in" : "Create account"}
+                  ? mode === "signin" ? "Signing in…" : mode === "signup" ? "Creating account…" : "Sending link…"
+                  : mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
               </Button>
             </form>
 
@@ -134,22 +185,14 @@ export default function LoginPage() {
               {mode === "signin" ? (
                 <>
                   Don&apos;t have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => switchMode("signup")}
-                    className="font-medium text-foreground hover:underline"
-                  >
+                  <button type="button" onClick={() => switchMode("signup")} className="font-medium text-foreground hover:underline">
                     Sign up
                   </button>
                 </>
               ) : (
                 <>
                   Already have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => switchMode("signin")}
-                    className="font-medium text-foreground hover:underline"
-                  >
+                  <button type="button" onClick={() => switchMode("signin")} className="font-medium text-foreground hover:underline">
                     Sign in
                   </button>
                 </>

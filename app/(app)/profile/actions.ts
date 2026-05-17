@@ -24,6 +24,13 @@ export async function sendPasswordReset() {
   if (!user?.email) return { error: "No email on account" }
 
   const { error } = await supabase.auth.resetPasswordForEmail(user.email)
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyAuthError(error.message) }
   return { success: true }
+}
+
+function friendlyAuthError(msg: string): string {
+  if (msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("over_email")) {
+    return "Too many emails sent recently. Please wait a few minutes and try again."
+  }
+  return msg
 }

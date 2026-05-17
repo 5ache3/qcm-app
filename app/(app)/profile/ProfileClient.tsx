@@ -1,14 +1,16 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { User, KeyRound } from "lucide-react"
+import { User, KeyRound, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { createClient } from "@/lib/supabase/client"
 import { updateProfile, sendPasswordReset } from "./actions"
 
 interface Props {
@@ -18,9 +20,18 @@ interface Props {
 }
 
 export function ProfileClient({ email, fullName, role }: Props) {
+  const router = useRouter()
   const [name, setName] = useState(fullName)
   const [isPending, startTransition] = useTransition()
   const [resetSent, setResetSent] = useState(false)
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    toast.success("Signed out")
+    router.push("/login")
+    router.refresh()
+  }
 
   function handleSave() {
     if (!name.trim()) { toast.error("Name cannot be empty"); return }
@@ -97,6 +108,17 @@ export function ProfileClient({ email, fullName, role }: Props) {
           </Button>
         </CardContent>
       </Card>
+
+      <Separator />
+
+      <Button
+        variant="destructive"
+        className="w-full"
+        onClick={handleSignOut}
+      >
+        <LogOut className="h-4 w-4 mr-2" />
+        Sign out
+      </Button>
     </div>
   )
 }
