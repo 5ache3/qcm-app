@@ -12,7 +12,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role")
+    .select("full_name, role, status")
     .eq("id", user.id)
     .single()
 
@@ -21,6 +21,7 @@ export default async function ProfilePage() {
       email={user.email ?? ""}
       fullName={profile?.full_name ?? ""}
       role={profile?.role ?? "student"}
+      status={(profile?.status as string) ?? "pending"}
     />
   )
 }

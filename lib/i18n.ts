@@ -137,6 +137,11 @@ export type Dict = {
   review_retake: string
 
   // Profile
+  pending_title: string
+  pending_desc: string
+  pending_status: string
+  admin_approve_btn: string
+  admin_pending_section: string
   profile_title: string
   profile_account: string
   profile_display_name: string
@@ -391,6 +396,11 @@ const fr: Dict = {
   review_retake: "Repasser le test",
 
   // Profile
+  pending_title: "Compte en attente d'approbation",
+  pending_desc: "Votre compte a été créé mais doit être approuvé par un administrateur avant que vous puissiez accéder à l'application. Vous pouvez mettre à jour votre nom et vous déconnecter en attendant.",
+  pending_status: "En attente",
+  admin_approve_btn: "Approuver",
+  admin_pending_section: "En attente d'approbation",
   profile_title: "Profil",
   profile_account: "Détails du compte",
   profile_display_name: "Nom d'affichage",
@@ -645,6 +655,11 @@ const ar: Dict = {
   review_retake: "إعادة الاختبار",
 
   // Profile
+  pending_title: "الحساب قيد الانتظار",
+  pending_desc: "تم إنشاء حسابك ولكن يجب أن يوافق عليه مسؤول قبل أن تتمكن من الوصول إلى التطبيق. يمكنك تحديث اسمك وتسجيل الخروج في هذه الأثناء.",
+  pending_status: "قيد الانتظار",
+  admin_approve_btn: "موافقة",
+  admin_pending_section: "في انتظار الموافقة",
   profile_title: "الملف الشخصي",
   profile_account: "تفاصيل الحساب",
   profile_display_name: "الاسم المعروض",

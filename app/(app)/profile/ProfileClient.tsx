@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { User, KeyRound, LogOut, Languages } from "lucide-react"
+import { User, KeyRound, LogOut, Languages, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,13 +19,14 @@ interface Props {
   email: string
   fullName: string
   role: string
+  status: string
 }
 
-export function ProfileClient({ email, fullName, role }: Props) {
+export function ProfileClient({ email, fullName, role, status }: Props) {
   const t = useT()
   const router = useRouter()
   const [name, setName] = useState(fullName)
-  const [isPending, startTransition] = useTransition()
+  const [isSaving, startTransition] = useTransition()
   const [resetSent, setResetSent] = useState(false)
 
   async function handleSignOut() {
@@ -54,12 +55,30 @@ export function ProfileClient({ email, fullName, role }: Props) {
     })
   }
 
+  const isPendingApproval = status === "pending"
+
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-md">
       <div>
         <h1 className="text-2xl font-bold">{t.profile_title}</h1>
         <p className="text-muted-foreground text-sm mt-0.5">{email}</p>
       </div>
+
+      {isPendingApproval && (
+        <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+          <CardContent className="pt-5 pb-5 flex gap-3">
+            <Clock className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-semibold text-sm text-amber-800 dark:text-amber-200">
+                {t.pending_title}
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                {t.pending_desc}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="pb-3">
@@ -85,8 +104,8 @@ export function ProfileClient({ email, fullName, role }: Props) {
               {role}
             </Badge>
           </div>
-          <Button disabled={isPending || name === fullName} onClick={handleSave}>
-            {isPending ? t.profile_saving : t.profile_save}
+          <Button disabled={isSaving || name === fullName} onClick={handleSave}>
+            {isSaving ? t.profile_saving : t.profile_save}
           </Button>
         </CardContent>
       </Card>
@@ -104,7 +123,7 @@ export function ProfileClient({ email, fullName, role }: Props) {
           </p>
           <Button
             variant="outline"
-            disabled={isPending || resetSent}
+            disabled={isSaving || resetSent}
             onClick={handlePasswordReset}
           >
             {resetSent ? t.profile_reset_sent : t.profile_send_reset}
