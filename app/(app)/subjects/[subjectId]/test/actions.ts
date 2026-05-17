@@ -63,9 +63,20 @@ export async function startTest(subjectId: string) {
 
     const shuffled = [...allQuestions].sort(() => Math.random() - 0.5).slice(0, 20)
 
+    const { data: maxTest } = await supabase
+      .from("tests")
+      .select("test_number")
+      .eq("user_id", user.id)
+      .eq("subject_id", subjectId)
+      .order("test_number", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const testNumber = (maxTest?.test_number ?? 0) + 1
+
     const { data: test, error } = await supabase
       .from("tests")
-      .insert({ user_id: user.id, subject_id: subjectId, status: "in_progress" })
+      .insert({ user_id: user.id, subject_id: subjectId, status: "in_progress", test_number: testNumber })
       .select("id, started_at")
       .single()
 
@@ -195,6 +206,17 @@ export async function retakeTest(originalTestId: string) {
     .eq("subject_id", original.subject_id)
     .eq("status", "in_progress")
 
+  const { data: maxTest } = await supabase
+    .from("tests")
+    .select("test_number")
+    .eq("user_id", user.id)
+    .eq("subject_id", original.subject_id)
+    .order("test_number", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const testNumber = (maxTest?.test_number ?? 0) + 1
+
   const { data: newTest, error } = await supabase
     .from("tests")
     .insert({
@@ -202,6 +224,7 @@ export async function retakeTest(originalTestId: string) {
       subject_id: original.subject_id,
       status: "in_progress",
       retake_of: originalTestId,
+      test_number: testNumber,
     })
     .select("id")
     .single()

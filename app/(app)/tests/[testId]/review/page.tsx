@@ -31,12 +31,23 @@ export default async function TestReviewPage({ params }: Props) {
 
   const { data: test } = await supabase
     .from("tests")
-    .select("id, subject_id, percentage, score, duration_seconds, status, started_at, subjects(name, icon)")
+    .select("id, subject_id, percentage, score, duration_seconds, status, started_at, test_number, retake_of, subjects(name, icon)")
     .eq("id", testId)
     .eq("user_id", user!.id)
     .single()
 
   if (!test) notFound()
+
+  // Look up parent test number if this is a retake
+  let parentTestNumber: number | null = null
+  if (test.retake_of) {
+    const { data: parent } = await supabase
+      .from("tests")
+      .select("test_number")
+      .eq("id", test.retake_of as string)
+      .single()
+    parentTestNumber = (parent?.test_number as number | null) ?? null
+  }
 
   const { data: testQuestions } = await supabase
     .from("test_questions")
@@ -91,6 +102,14 @@ export default async function TestReviewPage({ params }: Props) {
         <CardContent className="pt-6 pb-6 text-center space-y-2">
           <div className="flex justify-center">
             <Trophy className={`h-10 w-10 ${pct >= 80 ? "text-green-600" : pct >= 50 ? "text-yellow-600" : "text-red-500"}`} />
+          </div>
+          <div className="text-sm font-semibold text-muted-foreground tracking-wide uppercase">
+            {t.test_label} #{(test.test_number as number | null) ?? "?"}
+            {parentTestNumber != null && (
+              <span className="ml-2 normal-case font-normal">
+                ↺ {t.test_label} #{parentTestNumber}
+              </span>
+            )}
           </div>
           <div className="text-4xl font-bold">{pct.toFixed(1)}%</div>
           <div className="text-sm text-muted-foreground">

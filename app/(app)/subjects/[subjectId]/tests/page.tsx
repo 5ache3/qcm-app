@@ -36,25 +36,14 @@ export default async function SubjectTestsPage({ params }: Props) {
 
   const { data: tests } = await supabase
     .from("tests")
-    .select("id, started_at, completed_at, duration_seconds, score, percentage, status, retake_of")
+    .select("id, started_at, duration_seconds, score, percentage, status, test_number, retake_of")
     .eq("user_id", user!.id)
     .eq("subject_id", subjectId)
     .in("status", ["completed", "expired"])
-    .order("started_at", { ascending: false })
+    .order("test_number", { ascending: false })
 
-  // Compute attempt number for each test (1 = original, 2 = first retry, etc.)
-  const attemptMap = new Map<string, number>()
-  if (tests) {
-    for (const test of [...tests].reverse()) {
-      const retakeOf = test.retake_of as string | null
-      if (!retakeOf) {
-        attemptMap.set(test.id, 1)
-      } else {
-        const parentAttempt = attemptMap.get(retakeOf) ?? 1
-        attemptMap.set(test.id, parentAttempt + 1)
-      }
-    }
-  }
+  // Map id → test_number to resolve retake_of references
+  const numberById = new Map((tests ?? []).map((t) => [t.id, t.test_number as number | null]))
 
   const locale = lang === "ar" ? "ar-MA" : "fr-FR"
 
@@ -83,38 +72,41 @@ export default async function SubjectTestsPage({ params }: Props) {
         <div className="flex flex-col space-y-2">
           {tests.map((test) => {
             const pct = test.percentage ?? 0
-            const attempt = attemptMap.get(test.id) ?? 1
+            const num = test.test_number as number | null
+            const retakeOfId = test.retake_of as string | null
+            const parentNum = retakeOfId ? numberById.get(retakeOfId) : null
 
             return (
               <Card key={test.id} className="hover:shadow-sm transition-shadow">
                 <CardContent className="flex items-center gap-3 p-4">
-                  {/* Clickable area → review */}
                   <Link href={`/tests/${test.id}/review`} className="flex-1 min-w-0">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-medium">
-                          {new Date(test.started_at).toLocaleDateString(locale, {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })}{" "}
-                          <span className="text-muted-foreground font-normal">
-                            {new Date(test.started_at).toLocaleTimeString(locale, {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
+                        <p className="text-sm font-semibold">
+                          {t.test_label} #{num ?? "?"}
                         </p>
-                        {attempt > 1 && (
-                          <Badge variant="outline" className="text-xs">
-                            {t.retake_label} #{attempt}
-                          </Badge>
+                        {parentNum != null && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <span>↺</span>
+                            <span>{t.test_label} #{parentNum}</span>
+                          </span>
                         )}
                         {test.status === "expired" && (
                           <Badge variant="warning" className="text-xs">{t.test_expired}</Badge>
                         )}
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span>
+                          {new Date(test.started_at).toLocaleDateString(locale, {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}{" "}
+                          {new Date(test.started_at).toLocaleTimeString(locale, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {formatDuration(test.duration_seconds)}
@@ -124,7 +116,6 @@ export default async function SubjectTestsPage({ params }: Props) {
                     </div>
                   </Link>
 
-                  {/* Score badge + retake button */}
                   <div className="flex items-center gap-2 shrink-0">
                     <Badge
                       variant={pct >= 80 ? "success" : pct >= 50 ? "warning" : "error"}
