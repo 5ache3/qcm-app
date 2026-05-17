@@ -146,7 +146,7 @@ export default async function SubjectPage({ params }: Props) {
               <Link href={`/subjects/${subjectId}/tests`}>{t.see_all}</Link>
             </Button>
           </div>
-          <div className="space-y-2">
+          <div className="flex flex-col space-y-2">
             {recentTests.map((test) => (
               <Link key={test.id} href={`/tests/${test.id}/review`}>
                 <div className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
@@ -166,8 +166,8 @@ export default async function SubjectPage({ params }: Props) {
                       (test.percentage ?? 0) >= 80
                         ? "success"
                         : (test.percentage ?? 0) >= 50
-                        ? "warning"
-                        : "error"
+                          ? "warning"
+                          : "error"
                     }
                   >
                     {test.percentage?.toFixed(0) ?? 0}%

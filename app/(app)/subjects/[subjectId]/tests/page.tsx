@@ -65,7 +65,7 @@ export default async function SubjectTestsPage({ params }: Props) {
           </Button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-col space-y-2">
           {tests.map((test) => {
             const pct = test.percentage ?? 0
             return (
