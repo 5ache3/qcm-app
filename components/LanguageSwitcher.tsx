@@ -21,7 +21,7 @@ export function LanguageSwitcher() {
       onClick={switchLang}
       className="w-full justify-start text-muted-foreground font-medium text-sm"
     >
-      {lang === "fr" ? "🇲🇦 عربي" : "🇫🇷 Français"}
+      {lang === "fr" ? "🇲🇷 عربي" : "🇫🇷 Français"}
     </Button>
   )
 }
