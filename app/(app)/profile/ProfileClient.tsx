@@ -28,17 +28,17 @@ export function ProfileClient({ email, fullName, role }: Props) {
   async function handleSignOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    toast.success("Signed out")
+    toast.success("Déconnecté")
     router.push("/login")
     router.refresh()
   }
 
   function handleSave() {
-    if (!name.trim()) { toast.error("Name cannot be empty"); return }
+    if (!name.trim()) { toast.error("Le nom ne peut pas être vide"); return }
     startTransition(async () => {
       const res = await updateProfile({ full_name: name.trim() })
       if (res?.error) { toast.error(res.error); return }
-      toast.success("Profile updated")
+      toast.success("Profil mis à jour")
     })
   }
 
@@ -47,14 +47,14 @@ export function ProfileClient({ email, fullName, role }: Props) {
       const res = await sendPasswordReset()
       if (res?.error) { toast.error(res.error); return }
       setResetSent(true)
-      toast.success("Password reset email sent")
+      toast.success("E-mail de réinitialisation envoyé")
     })
   }
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-md">
       <div>
-        <h1 className="text-2xl font-bold">Profile</h1>
+        <h1 className="text-2xl font-bold">Profil</h1>
         <p className="text-muted-foreground text-sm mt-0.5">{email}</p>
       </div>
 
@@ -62,28 +62,28 @@ export function ProfileClient({ email, fullName, role }: Props) {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <User className="h-4 w-4" />
-            Account details
+            Détails du compte
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="full_name">Display name</Label>
+            <Label htmlFor="full_name">Nom d&apos;affichage</Label>
             <Input
               id="full_name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
+              placeholder="Votre nom"
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
             />
           </div>
           <div className="flex items-center gap-3">
-            <Label>Role</Label>
+            <Label>Rôle</Label>
             <Badge variant={role === "admin" ? "default" : "secondary"} className="capitalize">
               {role}
             </Badge>
           </div>
           <Button disabled={isPending || name === fullName} onClick={handleSave}>
-            {isPending ? "Saving…" : "Save changes"}
+            {isPending ? "Sauvegarde…" : "Sauvegarder"}
           </Button>
         </CardContent>
       </Card>
@@ -92,19 +92,19 @@ export function ProfileClient({ email, fullName, role }: Props) {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <KeyRound className="h-4 w-4" />
-            Password
+            Mot de passe
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-3">
-            We&apos;ll send a reset link to <span className="font-medium text-foreground">{email}</span>.
+            Nous enverrons un lien de réinitialisation à <span className="font-medium text-foreground">{email}</span>.
           </p>
           <Button
             variant="outline"
             disabled={isPending || resetSent}
             onClick={handlePasswordReset}
           >
-            {resetSent ? "Email sent" : "Send reset email"}
+            {resetSent ? "E-mail envoyé" : "Envoyer l'e-mail de réinitialisation"}
           </Button>
         </CardContent>
       </Card>
@@ -117,7 +117,7 @@ export function ProfileClient({ email, fullName, role }: Props) {
         onClick={handleSignOut}
       >
         <LogOut className="h-4 w-4 mr-2" />
-        Sign out
+        Se déconnecter
       </Button>
     </div>
   )

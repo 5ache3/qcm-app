@@ -104,7 +104,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
         score,
         status: questionStatus === "unanswered" ? "wrong" : questionStatus,
       })
-      if (!result.success) toast.error("Failed to save answer")
+      if (!result.success) toast.error("Échec de la sauvegarde de la réponse")
     })
   }
 
@@ -138,9 +138,9 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
           <span className="font-semibold text-sm">{subject.icon ?? "📚"} {subject.name}</span>
         </div>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>{totalAnswered}/{shuffledQuestions.length} answered</span>
+          <span>{totalAnswered}/{shuffledQuestions.length} répondu(e)s</span>
           {totalAnswered > 0 && (
-            <Badge variant="success">{totalCorrect} correct</Badge>
+            <Badge variant="success">{totalCorrect} correct{totalCorrect > 1 ? "s" : ""}</Badge>
           )}
         </div>
       </div>
@@ -180,7 +180,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
           <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                Question {currentIndex + 1} of {shuffledQuestions.length}
+                Question {currentIndex + 1} sur {shuffledQuestions.length}
               </span>
               <div className="flex items-center gap-2">
                 {question.difficulty && (
@@ -196,7 +196,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
               <CardHeader>
                 <p className="font-medium leading-relaxed">{question.question_text}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Select all correct answers
+                  Sélectionnez toutes les réponses correctes
                 </p>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -238,7 +238,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
               <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800">
                 <CardContent className="pt-4">
                   <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
-                    Explanation
+                    Explication
                   </p>
                   <p className="text-sm text-blue-700 dark:text-blue-300">{question.explanation}</p>
                 </CardContent>
@@ -261,7 +261,7 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
                     disabled={isPending}
                   >
                     <CheckCircle2 className="h-4 w-4 mr-1" />
-                    Submit answer
+                    Confirmer la réponse
                   </Button>
                 )}
               </div>

@@ -21,7 +21,7 @@ export default function ResetPasswordPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (password !== confirm) {
-      toast.error("Passwords do not match")
+      toast.error("Les mots de passe ne correspondent pas")
       return
     }
     setLoading(true)
@@ -32,7 +32,7 @@ export default function ResetPasswordPage() {
       toast.error(error.message)
       return
     }
-    toast.success("Password updated. You can now sign in.")
+    toast.success("Mot de passe mis à jour. Vous pouvez maintenant vous connecter.")
     router.push("/login")
   }
 
@@ -43,19 +43,19 @@ export default function ResetPasswordPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <BookOpen className="h-6 w-6" />
           </div>
-          <h1 className="text-2xl font-bold">QCM Revision</h1>
-          <p className="text-sm text-muted-foreground">Set a new password</p>
+          <h1 className="text-2xl font-bold">QCM Révision</h1>
+          <p className="text-sm text-muted-foreground">Définir un nouveau mot de passe</p>
         </div>
 
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg">New password</CardTitle>
-            <CardDescription>Choose a strong password of at least 6 characters.</CardDescription>
+            <CardTitle className="text-lg">Nouveau mot de passe</CardTitle>
+            <CardDescription>Choisissez un mot de passe d&apos;au moins 6 caractères.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">New password</Label>
+                <Label htmlFor="password">Nouveau mot de passe</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -80,7 +80,7 @@ export default function ResetPasswordPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirm">Confirm password</Label>
+                <Label htmlFor="confirm">Confirmer le mot de passe</Label>
                 <div className="relative">
                   <Input
                     id="confirm"
@@ -105,7 +105,7 @@ export default function ResetPasswordPage() {
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Updating…" : "Update password"}
+                {loading ? "Mise à jour…" : "Mettre à jour le mot de passe"}
               </Button>
             </form>
           </CardContent>

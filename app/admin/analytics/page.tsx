@@ -129,15 +129,15 @@ export default async function AdminAnalyticsPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-8">
-      <h1 className="text-2xl font-bold">Analytics</h1>
+      <h1 className="text-2xl font-bold">Statistiques</h1>
 
       {/* Top-level numbers */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "Students", value: userCount ?? 0 },
-          { label: "Practice answers", value: totalAnswers },
-          { label: "Tests completed", value: totalTests },
-          { label: "Overall correct", value: overallCorrectPct != null ? `${overallCorrectPct}%` : "—" },
+          { label: "Étudiants", value: userCount ?? 0 },
+          { label: "Réponses entraînement", value: totalAnswers },
+          { label: "Tests complétés", value: totalTests },
+          { label: "Correct global", value: overallCorrectPct != null ? `${overallCorrectPct}%` : "—" },
         ].map(({ label, value }) => (
           <Card key={label} className="text-center p-3">
             <div className="text-2xl font-bold">{value}</div>
@@ -151,7 +151,7 @@ export default async function AdminAnalyticsPage() {
         <div className="space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
             <BarChart2 className="h-4 w-4" />
-            Performance by subject
+            Performance par matière
           </h2>
           <div className="space-y-4">
             {subjectRows.map((row) => (
@@ -163,11 +163,11 @@ export default async function AdminAnalyticsPage() {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
-                      {row.activeUsers.size} active
+                      {row.activeUsers.size} actif{row.activeUsers.size > 1 ? "s" : ""}
                     </span>
-                    <span>{row.totalAnswers} answers</span>
+                    <span>{row.totalAnswers} réponses</span>
                     {row.avgTestScore != null && (
-                      <span>avg test {row.avgTestScore}%</span>
+                      <span>moy. test {row.avgTestScore}%</span>
                     )}
                     {row.correctPct != null && (
                       <Badge
@@ -193,7 +193,7 @@ export default async function AdminAnalyticsPage() {
         <div className="space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
             <TrendingDown className="h-4 w-4" />
-            Most missed questions
+            Questions les plus ratées
           </h2>
           <div className="space-y-2">
             {hardestRows.map((q) => (
@@ -203,14 +203,14 @@ export default async function AdminAnalyticsPage() {
                     <div className="min-w-0 space-y-0.5">
                       <p className="text-sm leading-snug line-clamp-2">{q.question_text}</p>
                       <p className="text-xs text-muted-foreground">
-                        {q.subject?.icon ?? "📚"} {q.subject?.name} · {q.total} attempt{q.total > 1 ? "s" : ""}
+                        {q.subject?.icon ?? "📚"} {q.subject?.name} · {q.total} tentative{q.total > 1 ? "s" : ""}
                       </p>
                     </div>
                     <Badge
                       variant={q.failRate >= 70 ? "error" : q.failRate >= 40 ? "warning" : "muted"}
                       className="shrink-0"
                     >
-                      {q.failRate}% fail
+                      {q.failRate}% d&apos;échec
                     </Badge>
                   </div>
                 </CardContent>
@@ -223,7 +223,7 @@ export default async function AdminAnalyticsPage() {
       {subjectRows.length === 0 && hardestRows.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <BarChart2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p>No data yet. Analytics will appear once students start practising.</p>
+          <p>Aucune donnée. Les statistiques apparaîtront lorsque les étudiants commenceront à s&apos;entraîner.</p>
         </div>
       )}
     </div>

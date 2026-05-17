@@ -20,8 +20,8 @@ export function QuestionsPageClient({ subjects }: Props) {
       <h1 className="text-2xl font-bold">Questions</h1>
       <Tabs defaultValue="manage">
         <TabsList>
-          <TabsTrigger value="manage">Manage</TabsTrigger>
-          <TabsTrigger value="import">Import</TabsTrigger>
+          <TabsTrigger value="manage">Gérer</TabsTrigger>
+          <TabsTrigger value="import">Importer</TabsTrigger>
         </TabsList>
         <TabsContent value="manage" className="mt-4">
           <QuestionsManageClient subjects={subjects} />

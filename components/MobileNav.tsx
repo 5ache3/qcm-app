@@ -14,18 +14,18 @@ import {
 import { cn } from "@/lib/utils"
 
 const studentNav = [
-  { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-  { href: "/subjects", label: "Subjects", icon: BookMarked },
-  { href: "/mistakes", label: "Mistakes", icon: AlertCircle },
-  { href: "/profile", label: "Profile", icon: UserCircle },
+  { href: "/dashboard", label: "Accueil", icon: LayoutDashboard },
+  { href: "/subjects", label: "Matières", icon: BookMarked },
+  { href: "/mistakes", label: "Erreurs", icon: AlertCircle },
+  { href: "/profile", label: "Profil", icon: UserCircle },
 ]
 
 const adminNav = [
-  { href: "/admin", label: "Overview", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/subjects", label: "Subjects", icon: BookMarked },
+  { href: "/admin", label: "Vue d'ensemble", icon: LayoutDashboard },
+  { href: "/admin/users", label: "Utilisateurs", icon: Users },
+  { href: "/admin/subjects", label: "Matières", icon: BookMarked },
   { href: "/admin/questions", label: "Questions", icon: ClipboardList },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
+  { href: "/admin/analytics", label: "Statistiques", icon: BarChart2 },
 ]
 
 interface Props {

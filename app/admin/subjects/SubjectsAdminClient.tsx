@@ -35,7 +35,7 @@ export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Pro
         toast.error(result.error)
         return
       }
-      toast.success("Subject created")
+      toast.success("Matière créée")
       setShowForm(false)
       // Reload subjects from server by refreshing the route
       window.location.reload()
@@ -43,14 +43,14 @@ export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Pro
   }
 
   function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete "${name}" and all its questions? This cannot be undone.`)) return
+    if (!confirm(`Supprimer "${name}" et toutes ses questions ? Cette action est irréversible.`)) return
     startTransition(async () => {
       const result = await deleteSubject(id)
       if (result.error) {
         toast.error(result.error)
         return
       }
-      toast.success("Subject deleted")
+      toast.success("Matière supprimée")
       setSubjects((prev) => prev.filter((s) => s.id !== id))
     })
   }
@@ -58,36 +58,36 @@ export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Pro
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Subjects</h1>
+        <h1 className="text-2xl font-bold">Matières</h1>
         <Button onClick={() => setShowForm((v) => !v)} variant={showForm ? "outline" : "default"}>
           <Plus className="h-4 w-4 mr-2" />
-          {showForm ? "Cancel" : "New subject"}
+          {showForm ? "Annuler" : "Nouvelle matière"}
         </Button>
       </div>
 
       {showForm && (
         <Card className="border-primary/30">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Create subject</CardTitle>
+            <CardTitle className="text-base">Créer une matière</CardTitle>
           </CardHeader>
           <CardContent>
             <form action={handleCreate} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="name">Name *</Label>
-                  <Input id="name" name="name" placeholder="e.g. Mathematics" required />
+                  <Label htmlFor="name">Nom *</Label>
+                  <Input id="name" name="name" placeholder="ex. Mathématiques" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="icon">Icon (emoji)</Label>
+                  <Label htmlFor="icon">Icône (emoji)</Label>
                   <Input id="icon" name="icon" placeholder="📐" maxLength={4} />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Input id="description" name="description" placeholder="Optional short description" />
+                <Input id="description" name="description" placeholder="Courte description (optionnelle)" />
               </div>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Creating…" : "Create subject"}
+                {isPending ? "Création…" : "Créer la matière"}
               </Button>
             </form>
           </CardContent>
@@ -97,7 +97,7 @@ export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Pro
       {subjects.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p>No subjects yet. Create one to get started.</p>
+          <p>Aucune matière. Créez-en une pour commencer.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -117,7 +117,7 @@ export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Pro
               </div>
               <div className="flex items-center gap-3">
                 <Badge variant="outline">
-                  {questionCountMap[subject.id] ?? 0} questions
+                  {questionCountMap[subject.id] ?? 0} question{(questionCountMap[subject.id] ?? 0) !== 1 ? "s" : ""}
                 </Badge>
                 <Button
                   variant="ghost"

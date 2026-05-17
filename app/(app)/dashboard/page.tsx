@@ -30,14 +30,14 @@ export default async function DashboardPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Hello, {firstName} 👋</h1>
-        <p className="text-muted-foreground mt-1">Ready to study? Pick up where you left off.</p>
+        <h1 className="text-2xl font-bold">Bonjour, {firstName} 👋</h1>
+        <p className="text-muted-foreground mt-1">Prêt à réviser ? Reprenez là où vous vous êtes arrêté.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Subjects</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Matières</CardTitle>
             <BookMarked className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Tests Completed</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Tests complétés</CardTitle>
             <ClipboardList className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -60,15 +60,15 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <BookMarked className="h-5 w-5" />
-              Practice Mode
+              Mode entraînement
             </CardTitle>
           </CardHeader>
           <CardContent className="flex-1 space-y-2">
             <p className="text-sm text-muted-foreground">
-              Browse all questions for a subject and save your answers. Track which ones you got right, wrong, or partial.
+              Parcourez toutes les questions d&apos;une matière et sauvegardez vos réponses. Suivez lesquelles sont correctes, incorrectes ou partielles.
             </p>
             <Button asChild className="mt-4">
-              <Link href="/subjects">Choose a subject</Link>
+              <Link href="/subjects">Choisir une matière</Link>
             </Button>
           </CardContent>
         </Card>
@@ -77,15 +77,15 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Trophy className="h-5 w-5" />
-              Timed Test
+              Test chronométré
             </CardTitle>
           </CardHeader>
           <CardContent className="flex-1 space-y-2">
             <p className="text-sm text-muted-foreground">
-              Take a 20-question random test against the clock. Get a score and review every answer afterward.
+              Passez un test de 20 questions aléatoires contre la montre. Obtenez un score et révisez chaque réponse ensuite.
             </p>
             <Button asChild variant="outline" className="mt-4">
-              <Link href="/subjects">Pick a subject</Link>
+              <Link href="/subjects">Choisir une matière</Link>
             </Button>
           </CardContent>
         </Card>

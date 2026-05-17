@@ -54,7 +54,7 @@ export default async function SubjectPage({ params }: Props) {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/subjects">
             <ArrowLeft className="h-4 w-4" />
-            Subjects
+            Matières
           </Link>
         </Button>
       </div>
@@ -75,8 +75,8 @@ export default async function SubjectPage({ params }: Props) {
         {[
           { label: "Questions", value: questionCount ?? 0, variant: "outline" as const },
           { label: "Correct", value: correct, variant: "success" as const },
-          { label: "Partial", value: partial, variant: "warning" as const },
-          { label: "Wrong", value: wrong, variant: "error" as const },
+          { label: "Partiel", value: partial, variant: "warning" as const },
+          { label: "Incorrect", value: wrong, variant: "error" as const },
         ].map(({ label, value, variant }) => (
           <Card key={label} className="text-center p-3">
             <div className="text-2xl font-bold">{value}</div>
@@ -90,16 +90,16 @@ export default async function SubjectPage({ params }: Props) {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <BookOpen className="h-4 w-4" />
-              Practice Mode
+              Mode entraînement
             </CardTitle>
             <CardDescription>
-              Answer questions one by one. Your progress is saved automatically.
+              Répondez aux questions une par une. Votre progression est sauvegardée automatiquement.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
               <Link href={`/subjects/${subjectId}/practice`}>
-                {answered > 0 ? "Continue practising" : "Start practising"}
+                {answered > 0 ? "Continuer l'entraînement" : "Commencer l'entraînement"}
               </Link>
             </Button>
           </CardContent>
@@ -109,24 +109,24 @@ export default async function SubjectPage({ params }: Props) {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Timer className="h-4 w-4" />
-              Timed Test
+              Test chronométré
             </CardTitle>
             <CardDescription>
-              20 random questions against the clock. Score saved at the end.
+              20 questions aléatoires contre la montre. Score sauvegardé à la fin.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {canTakeTest ? (
               <Button asChild variant="outline" className="w-full">
-                <Link href={`/subjects/${subjectId}/test`}>Start test</Link>
+                <Link href={`/subjects/${subjectId}/test`}>Commencer le test</Link>
               </Button>
             ) : (
               <div className="space-y-2">
                 <Button disabled className="w-full" variant="outline">
-                  Start test
+                  Commencer le test
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
-                  Needs at least 20 questions ({questionCount ?? 0} available)
+                  Il faut au moins 20 questions ({questionCount ?? 0} disponibles)
                 </p>
               </div>
             )}
@@ -139,10 +139,10 @@ export default async function SubjectPage({ params }: Props) {
           <div className="flex items-center justify-between">
             <h2 className="font-semibold flex items-center gap-2">
               <History className="h-4 w-4" />
-              Recent Tests
+              Tests récents
             </h2>
             <Button variant="ghost" size="sm" asChild>
-              <Link href={`/subjects/${subjectId}/tests`}>View all</Link>
+              <Link href={`/subjects/${subjectId}/tests`}>Voir tout</Link>
             </Button>
           </div>
           <div className="space-y-2">
@@ -150,12 +150,12 @@ export default async function SubjectPage({ params }: Props) {
               <Link key={test.id} href={`/tests/${test.id}/review`}>
                 <div className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
                   <span className="text-sm text-muted-foreground">
-                    {new Date(test.started_at).toLocaleDateString("en-GB", {
+                    {new Date(test.started_at).toLocaleDateString("fr-FR", {
                       day: "numeric",
                       month: "short",
                       year: "numeric",
                     })}{" "}
-                    {new Date(test.started_at).toLocaleTimeString("en-GB", {
+                    {new Date(test.started_at).toLocaleTimeString("fr-FR", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}

@@ -31,18 +31,18 @@ interface AppSidebarProps {
 }
 
 const studentNav = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/subjects", label: "Subjects", icon: BookMarked },
-  { href: "/mistakes", label: "Mistakes", icon: AlertCircle },
-  { href: "/profile", label: "Profile", icon: UserCircle },
+  { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+  { href: "/subjects", label: "Matières", icon: BookMarked },
+  { href: "/mistakes", label: "Erreurs", icon: AlertCircle },
+  { href: "/profile", label: "Profil", icon: UserCircle },
 ]
 
 const adminNav = [
-  { href: "/admin", label: "Overview", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/subjects", label: "Subjects", icon: BookMarked },
+  { href: "/admin", label: "Vue d'ensemble", icon: LayoutDashboard },
+  { href: "/admin/users", label: "Utilisateurs", icon: Users },
+  { href: "/admin/subjects", label: "Matières", icon: BookMarked },
   { href: "/admin/questions", label: "Questions", icon: ClipboardList },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
+  { href: "/admin/analytics", label: "Statistiques", icon: BarChart2 },
 ]
 
 export function AppSidebar({ user, profile }: AppSidebarProps) {
@@ -60,7 +60,7 @@ export function AppSidebar({ user, profile }: AppSidebarProps) {
   async function handleSignOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    toast.success("Signed out")
+    toast.success("Déconnecté")
     router.push("/login")
     router.refresh()
   }
@@ -111,7 +111,7 @@ export function AppSidebar({ user, profile }: AppSidebarProps) {
           onClick={handleSignOut}
         >
           <LogOut className="h-4 w-4" />
-          Sign out
+          Se déconnecter
         </Button>
       </div>
     </aside>

@@ -49,13 +49,13 @@ export default async function SubjectMistakesPage({ params }: Props) {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/mistakes">
             <ArrowLeft className="h-4 w-4 mr-1" />
-            All subjects
+            Toutes les matières
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
           <Link href={`/subjects/${subjectId}/practice`}>
             <BookOpen className="h-3.5 w-3.5 mr-1.5" />
-            Practise
+            S&apos;entraîner
           </Link>
         </Button>
       </div>
@@ -65,13 +65,13 @@ export default async function SubjectMistakesPage({ params }: Props) {
         <div>
           <h1 className="text-2xl font-bold">{subject.name}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {answers?.length ?? 0} question{(answers?.length ?? 0) !== 1 ? "s" : ""} to review
+            {answers?.length ?? 0} question{(answers?.length ?? 0) !== 1 ? "s" : ""} à revoir
           </p>
         </div>
       </div>
 
       {!answers || answers.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No mistakes for this subject.</p>
+        <p className="text-sm text-muted-foreground">Aucune erreur pour cette matière.</p>
       ) : (
         <div className="space-y-3">
           {answers.map((ans) => {
@@ -121,7 +121,7 @@ export default async function SubjectMistakesPage({ params }: Props) {
                   </div>
                   {q.explanation && (
                     <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 px-3 py-2 mt-1">
-                      <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">Explanation</p>
+                      <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">Explication</p>
                       <p className="text-xs text-blue-600 dark:text-blue-400">{q.explanation}</p>
                     </div>
                   )}

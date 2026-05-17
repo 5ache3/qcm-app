@@ -71,16 +71,16 @@ export default async function AdminUserDetailPage({ params }: Props) {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/admin/users">
             <ArrowLeft className="h-4 w-4" />
-            Users
+            Utilisateurs
           </Link>
         </Button>
       </div>
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{profile.full_name ?? "Unnamed user"}</h1>
+          <h1 className="text-2xl font-bold">{profile.full_name ?? "Utilisateur sans nom"}</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
-            Joined {new Date(profile.created_at).toLocaleDateString()}
+            Inscrit le {new Date(profile.created_at).toLocaleDateString("fr-FR")}
           </p>
         </div>
         <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
@@ -91,10 +91,10 @@ export default async function AdminUserDetailPage({ params }: Props) {
       {/* Summary stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "Answered", value: totalAnswered },
+          { label: "Répondu", value: totalAnswered },
           { label: "Correct", value: totalCorrect },
-          { label: "Tests done", value: completedTests },
-          { label: "Avg score", value: avgScore ? `${avgScore}%` : "—" },
+          { label: "Tests passés", value: completedTests },
+          { label: "Score moyen", value: avgScore ? `${avgScore}%` : "—" },
         ].map(({ label, value }) => (
           <Card key={label} className="text-center p-3">
             <div className="text-2xl font-bold">{value}</div>
@@ -108,7 +108,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
         <div className="space-y-3">
           <h2 className="font-semibold flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
-            Practice by subject
+            Entraînement par matière
           </h2>
           <div className="space-y-3">
             {Array.from(practiceBySubject.entries()).map(([subjectId, stats]) => {
@@ -118,7 +118,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
                 <div key={subjectId} className="space-y-1.5">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">
-                      {subject?.icon ?? "📚"} {subject?.name ?? "Unknown"}
+                      {subject?.icon ?? "📚"} {subject?.name ?? "Inconnu"}
                     </span>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="text-green-600">{stats.correct} ✓</span>
@@ -140,7 +140,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
         <div className="space-y-3">
           <h2 className="font-semibold flex items-center gap-2">
             <Trophy className="h-4 w-4" />
-            Recent tests
+            Tests récents
           </h2>
           <div className="space-y-2">
             {tests.map((test) => {
@@ -151,10 +151,10 @@ export default async function AdminUserDetailPage({ params }: Props) {
                   <div className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
                     <div>
                       <p className="text-sm font-medium">
-                        {subject?.icon ?? "📚"} {subject?.name ?? "Unknown"}
+                        {subject?.icon ?? "📚"} {subject?.name ?? "Inconnu"}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(test.started_at).toLocaleDateString()}
+                        {new Date(test.started_at).toLocaleDateString("fr-FR")}
                       </p>
                     </div>
                     <Badge variant={pct >= 80 ? "success" : pct >= 50 ? "warning" : "error"}>
@@ -170,7 +170,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
 
       {totalAnswered === 0 && completedTests === 0 && (
         <p className="text-sm text-muted-foreground text-center py-8">
-          This user hasn&apos;t answered any questions yet.
+          Cet utilisateur n&apos;a pas encore répondu à des questions.
         </p>
       )}
     </div>

@@ -22,10 +22,13 @@ export function parseJSON(jsonText: string): { questions: ParsedQuestion[]; erro
   }
 
   // Accept { subject, questions: [...] } wrapper as well as a bare array
-  if (!Array.isArray(raw)) {
+  let items: unknown[]
+  if (Array.isArray(raw)) {
+    items = raw
+  } else {
     const wrapped = raw as Record<string, unknown>
     if (Array.isArray(wrapped.questions)) {
-      raw = wrapped.questions
+      items = wrapped.questions
     } else {
       return { questions: [], errors: ["JSON must be an array of question objects (or an object with a 'questions' array)"] }
     }
@@ -34,8 +37,8 @@ export function parseJSON(jsonText: string): { questions: ParsedQuestion[]; erro
   const errors: string[] = []
   const questions: ParsedQuestion[] = []
 
-  for (let i = 0; i < raw.length; i++) {
-    const item = raw[i] as Record<string, unknown>
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i] as Record<string, unknown>
     const label = `Item ${i + 1}`
 
     if (typeof item !== "object" || item === null) {

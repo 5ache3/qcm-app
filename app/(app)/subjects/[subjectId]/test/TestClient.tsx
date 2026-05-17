@@ -73,10 +73,10 @@ export function TestClient({ subject, questionCount, userId }: Props) {
       startTransition(async () => {
         try {
           const result = await submitTest(testData.testId, answerList, elapsed, expired)
-          if (expired) toast.info("Time's up! Your test has been submitted.")
+          if (expired) toast.info("Temps écoulé ! Votre test a été soumis.")
           router.push(`/tests/${result.testId}/review`)
         } catch {
-          toast.error("Failed to submit test. Please try again.")
+          toast.error("Échec de la soumission du test. Veuillez réessayer.")
           setPhase("active")
         }
       })
@@ -133,7 +133,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
         })
         setPhase("active")
       } catch (e: any) {
-        toast.error(e.message ?? "Failed to start test")
+        toast.error(e.message ?? "Échec du démarrage du test")
       }
     })
   }
@@ -170,15 +170,15 @@ export function TestClient({ subject, questionCount, userId }: Props) {
           </div>
           <div>
             <h1 className="text-2xl font-bold">{subject.name}</h1>
-            <p className="text-muted-foreground mt-1">Timed Test</p>
+            <p className="text-muted-foreground mt-1">Test chronométré</p>
           </div>
           <Card>
             <CardContent className="pt-6 space-y-4 text-left">
               {[
-                ["Questions", "20 random questions"],
-                ["Time limit", "10 minutes"],
-                ["Scoring", "Partial credit for partially correct answers"],
-                ["After submit", "Full review with correct answers"],
+                ["Questions", "20 questions aléatoires"],
+                ["Durée limite", "10 minutes"],
+                ["Notation", "Crédit partiel pour les réponses partielles"],
+                ["Après soumission", "Révision complète avec les bonnes réponses"],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between text-sm">
                   <span className="text-muted-foreground">{label}</span>
@@ -189,7 +189,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
           </Card>
           {questionCount < 20 ? (
             <p className="text-sm text-destructive">
-              Not enough questions ({questionCount}/20 available).
+              Pas assez de questions ({questionCount}/20 disponibles).
             </p>
           ) : (
             <Button
@@ -198,7 +198,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
               onClick={handleStart}
               disabled={isPending}
             >
-              {isPending ? "Preparing test…" : "Begin Test"}
+              {isPending ? "Préparation du test…" : "Commencer le test"}
             </Button>
           )}
         </div>
@@ -264,7 +264,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
           className="shrink-0 px-2 sm:px-3"
         >
           <Flag className="h-3.5 w-3.5 sm:mr-1.5" />
-          <span className="hidden sm:inline">{phase === "submitting" ? "Submitting…" : "Submit test"}</span>
+          <span className="hidden sm:inline">{phase === "submitting" ? "Soumission…" : "Soumettre le test"}</span>
         </Button>
       </div>
 
@@ -316,7 +316,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
               <p className="font-medium leading-relaxed">{question.question_text}</p>
               {!isConfirmed && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Select all correct answers
+                  Sélectionnez toutes les réponses correctes
                 </p>
               )}
             </CardHeader>
@@ -359,7 +359,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
                     )}
                     {isConfirmed && !option.is_correct && isSelected && (
                       <span className="text-xs font-medium text-red-600 dark:text-red-400 shrink-0">
-                        ✗ wrong
+                        ✗ incorrect
                       </span>
                     )}
                   </label>
@@ -374,7 +374,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
                   onClick={() => confirmAnswer(question)}
                 >
                   <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Confirm answer
+                  Confirmer la réponse
                 </Button>
               ) : (
                 <div
@@ -387,8 +387,8 @@ export function TestClient({ subject, questionCount, userId }: Props) {
                   }`}
                 >
                   <span>
-                    {confirmedResult.status === "correct" && "Correct!"}
-                    {confirmedResult.status === "partial" && "Partially correct"}
+                    {confirmedResult.status === "correct" && "Correct !"}
+                    {confirmedResult.status === "partial" && "Partiellement correct"}
                     {confirmedResult.status === "wrong" && "Incorrect"}
                   </span>
                   <span className="tabular-nums font-bold">
@@ -400,7 +400,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
               {/* Explanation (shown after confirm) */}
               {isConfirmed && question.explanation && (
                 <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 px-3 py-2">
-                  <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">Explanation</p>
+                  <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">Explication</p>
                   <p className="text-xs text-blue-600 dark:text-blue-400">{question.explanation}</p>
                 </div>
               )}
@@ -414,7 +414,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
               disabled={currentIndex === 0}
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Previous
+              Précédent
             </Button>
 
             {allConfirmed ? (
@@ -423,7 +423,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
                 disabled={phase === "submitting"}
               >
                 <Flag className="h-4 w-4 mr-1" />
-                {phase === "submitting" ? "Submitting…" : "Finish & submit"}
+                {phase === "submitting" ? "Soumission…" : "Terminer & soumettre"}
               </Button>
             ) : (
               <Button
@@ -431,7 +431,7 @@ export function TestClient({ subject, questionCount, userId }: Props) {
                 disabled={nextUnansweredIndex === null}
                 variant={isConfirmed ? "default" : "outline"}
               >
-                Next
+                Suivant
                 <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             )}

@@ -32,9 +32,9 @@ export default async function SubjectsPage() {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
         <BookMarked className="h-12 w-12 text-muted-foreground mb-4" />
-        <h2 className="text-lg font-semibold">No subjects yet</h2>
+        <h2 className="text-lg font-semibold">Aucune matière disponible</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Ask your admin to add subjects and questions.
+          Demandez à votre administrateur d&apos;ajouter des matières et des questions.
         </p>
       </div>
     )
@@ -43,8 +43,8 @@ export default async function SubjectsPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Subjects</h1>
-        <p className="text-muted-foreground mt-1">Choose a subject to practice or test yourself.</p>
+        <h1 className="text-2xl font-bold">Matières</h1>
+        <p className="text-muted-foreground mt-1">Choisissez une matière pour vous entraîner ou vous tester.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -75,13 +75,13 @@ export default async function SubjectsPage() {
                   {answered > 0 ? (
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{answered} answered</span>
+                        <span>{answered} répondu(e)s</span>
                         <span>{progressPct}% correct</span>
                       </div>
                       <Progress value={progressPct} className="h-1.5" />
                     </div>
                   ) : (
-                    <Badge variant="muted" className="text-xs">Not started</Badge>
+                    <Badge variant="muted" className="text-xs">Non commencé</Badge>
                   )}
                 </CardContent>
               </Card>

@@ -72,7 +72,7 @@ export default async function TestReviewPage({ params }: Props) {
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/subjects/${test.subject_id}`}>
             <ArrowLeft className="h-4 w-4" />
-            Back
+            Retour
           </Link>
         </Button>
       </div>
@@ -101,18 +101,18 @@ export default async function TestReviewPage({ params }: Props) {
               {formatDuration(test.duration_seconds)}
             </span>
             <span>
-              {new Date(test.started_at).toLocaleDateString("en-GB", {
+              {new Date(test.started_at).toLocaleDateString("fr-FR", {
                 day: "numeric",
                 month: "short",
                 year: "numeric",
               })}{" "}
-              {new Date(test.started_at).toLocaleTimeString("en-GB", {
+              {new Date(test.started_at).toLocaleTimeString("fr-FR", {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
             </span>
             {test.status === "expired" && (
-              <Badge variant="error">Time expired</Badge>
+              <Badge variant="error">Temps expiré</Badge>
             )}
           </div>
         </CardContent>
@@ -120,7 +120,7 @@ export default async function TestReviewPage({ params }: Props) {
 
       {/* Per-question review */}
       <div className="space-y-4">
-        <h2 className="font-semibold text-lg">Question Review</h2>
+        <h2 className="font-semibold text-lg">Révision des questions</h2>
         {testQuestions.map((tq) => {
           const q = tq.questions as any
           const answer = answerMap.get(tq.question_id)
@@ -176,7 +176,7 @@ export default async function TestReviewPage({ params }: Props) {
                 })}
                 {q.explanation && (
                   <div className="mt-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 px-3 py-2">
-                    <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">Explanation</p>
+                    <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-0.5">Explication</p>
                     <p className="text-xs text-blue-600 dark:text-blue-400">{q.explanation}</p>
                   </div>
                 )}
@@ -189,10 +189,10 @@ export default async function TestReviewPage({ params }: Props) {
       <Separator />
       <div className="flex gap-3 pb-6">
         <Button asChild variant="outline">
-          <Link href={`/subjects/${test.subject_id}`}>Back to subject</Link>
+          <Link href={`/subjects/${test.subject_id}`}>Retour à la matière</Link>
         </Button>
         <Button asChild>
-          <Link href={`/subjects/${test.subject_id}/test`}>Retake test</Link>
+          <Link href={`/subjects/${test.subject_id}/test`}>Repasser le test</Link>
         </Button>
       </div>
     </div>

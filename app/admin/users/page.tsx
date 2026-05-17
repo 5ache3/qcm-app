@@ -54,7 +54,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
     return (
       <div className="p-4 sm:p-6 flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
         <Users className="h-10 w-10 mb-3 opacity-30" />
-        <p>No users yet.</p>
+        <p>Aucun utilisateur pour l&apos;instant.</p>
       </div>
     )
   }
@@ -62,8 +62,8 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Users</h1>
-        <p className="text-muted-foreground mt-1">{count} registered</p>
+        <h1 className="text-2xl font-bold">Utilisateurs</h1>
+        <p className="text-muted-foreground mt-1">{count} inscrits</p>
       </div>
 
       <div className="space-y-2">
@@ -73,15 +73,15 @@ export default async function AdminUsersPage({ searchParams }: Props) {
               <CardContent className="flex items-center justify-between p-4">
                 <div className="space-y-0.5">
                   <p className="font-medium text-sm">
-                    {profile.full_name ?? <span className="text-muted-foreground italic">No name</span>}
+                    {profile.full_name ?? <span className="text-muted-foreground italic">Aucun nom</span>}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Joined {new Date(profile.created_at).toLocaleDateString()}
+                    Inscrit le {new Date(profile.created_at).toLocaleDateString("fr-FR")}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <span className="text-muted-foreground text-xs">
-                    {practiceCountMap[profile.id] ?? 0} answers ·{" "}
+                    {practiceCountMap[profile.id] ?? 0} réponses ·{" "}
                     {testCountMap[profile.id] ?? 0} tests
                   </span>
                   <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
@@ -99,15 +99,15 @@ export default async function AdminUsersPage({ searchParams }: Props) {
           <Button variant="outline" size="sm" asChild disabled={page === 1}>
             <Link href={`/admin/users?page=${page - 1}`}>
               <ChevronLeft className="h-4 w-4" />
-              Previous
+              Précédent
             </Link>
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
+            Page {page} sur {totalPages}
           </span>
           <Button variant="outline" size="sm" asChild disabled={page >= totalPages}>
             <Link href={`/admin/users?page=${page + 1}`}>
-              Next
+              Suivant
               <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>

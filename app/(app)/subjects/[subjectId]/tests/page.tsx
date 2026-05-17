@@ -51,14 +51,14 @@ export default async function SubjectTestsPage({ params }: Props) {
         </Button>
       </div>
 
-      <h1 className="text-2xl font-bold">Test History</h1>
+      <h1 className="text-2xl font-bold">Historique des tests</h1>
 
       {!tests || tests.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Trophy className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p>No completed tests yet.</p>
+          <p>Aucun test complété pour l&apos;instant.</p>
           <Button asChild className="mt-4">
-            <Link href={`/subjects/${subjectId}/test`}>Take a test</Link>
+            <Link href={`/subjects/${subjectId}/test`}>Passer un test</Link>
           </Button>
         </div>
       ) : (
@@ -71,13 +71,13 @@ export default async function SubjectTestsPage({ params }: Props) {
                   <CardContent className="flex items-center justify-between p-4">
                     <div className="space-y-1">
                       <p className="text-sm font-medium">
-                        {new Date(test.started_at).toLocaleDateString("en-GB", {
+                        {new Date(test.started_at).toLocaleDateString("fr-FR", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
                         })}{" "}
                         <span className="text-muted-foreground font-normal">
-                          {new Date(test.started_at).toLocaleTimeString("en-GB", {
+                          {new Date(test.started_at).toLocaleTimeString("fr-FR", {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
@@ -90,7 +90,7 @@ export default async function SubjectTestsPage({ params }: Props) {
                         </span>
                         <span>{(test.score ?? 0).toFixed(2)} pts</span>
                         {test.status === "expired" && (
-                          <Badge variant="warning" className="text-xs">Expired</Badge>
+                          <Badge variant="warning" className="text-xs">Expiré</Badge>
                         )}
                       </div>
                     </div>

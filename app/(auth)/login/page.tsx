@@ -41,7 +41,7 @@ export default function LoginPage() {
       if (error) {
         toast.error(friendlyAuthError(error.message))
       } else {
-        toast.success("Check your email for a reset link.")
+        toast.success("Vérifiez votre e-mail pour le lien de réinitialisation.")
         setMode("signin")
         setEmail("")
       }
@@ -68,7 +68,7 @@ export default function LoginPage() {
         setLoading(false)
         return
       }
-      toast.success("Account created! You can now sign in.")
+      toast.success("Compte créé ! Vous pouvez maintenant vous connecter.")
       setMode("signin")
       setPassword("")
       setLoading(false)
@@ -83,9 +83,9 @@ export default function LoginPage() {
   }
 
   const titles: Record<Mode, { title: string; description: string }> = {
-    signin: { title: "Sign in", description: "Enter your email and password" },
-    signup: { title: "Create account", description: "Fill in your details to get started" },
-    forgot: { title: "Reset password", description: "We'll send a reset link to your email" },
+    signin: { title: "Se connecter", description: "Saisissez votre e-mail et votre mot de passe" },
+    signup: { title: "Créer un compte", description: "Remplissez vos informations pour commencer" },
+    forgot: { title: "Réinitialiser le mot de passe", description: "Nous vous enverrons un lien par e-mail" },
   }
 
   return (
@@ -95,9 +95,9 @@ export default function LoginPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <BookOpen className="h-6 w-6" />
           </div>
-          <h1 className="text-2xl font-bold">QCM Revision</h1>
+          <h1 className="text-2xl font-bold">QCM Révision</h1>
           <p className="text-sm text-muted-foreground">
-            {mode === "signin" ? "Sign in to your account" : mode === "signup" ? "Create a new account" : "Forgot your password?"}
+            {mode === "signin" ? "Connectez-vous à votre compte" : mode === "signup" ? "Créez un nouveau compte" : "Mot de passe oublié ?"}
           </p>
         </div>
 
@@ -110,11 +110,11 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "signup" && (
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full name</Label>
+                  <Label htmlFor="fullName">Nom complet</Label>
                   <Input
                     id="fullName"
                     type="text"
-                    placeholder="Your name"
+                    placeholder="Votre nom"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
@@ -124,11 +124,11 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">E-mail</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="vous@exemple.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -138,7 +138,7 @@ export default function LoginPage() {
 
               {mode !== "forgot" && (
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Mot de passe</Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -167,7 +167,7 @@ export default function LoginPage() {
                         onClick={() => switchMode("forgot")}
                         className="text-xs text-muted-foreground hover:text-foreground hover:underline transition-colors"
                       >
-                        Forgot password?
+                        Mot de passe oublié ?
                       </button>
                     </div>
                   )}
@@ -176,24 +176,24 @@ export default function LoginPage() {
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading
-                  ? mode === "signin" ? "Signing in…" : mode === "signup" ? "Creating account…" : "Sending link…"
-                  : mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
+                  ? mode === "signin" ? "Connexion…" : mode === "signup" ? "Création du compte…" : "Envoi du lien…"
+                  : mode === "signin" ? "Se connecter" : mode === "signup" ? "Créer un compte" : "Envoyer le lien"}
               </Button>
             </form>
 
             <div className="mt-4 text-center text-sm text-muted-foreground">
               {mode === "signin" ? (
                 <>
-                  Don&apos;t have an account?{" "}
+                  Pas encore de compte ?{" "}
                   <button type="button" onClick={() => switchMode("signup")} className="font-medium text-foreground hover:underline">
-                    Sign up
+                    S&apos;inscrire
                   </button>
                 </>
               ) : (
                 <>
-                  Already have an account?{" "}
+                  Déjà un compte ?{" "}
                   <button type="button" onClick={() => switchMode("signin")} className="font-medium text-foreground hover:underline">
-                    Sign in
+                    Se connecter
                   </button>
                 </>
               )}

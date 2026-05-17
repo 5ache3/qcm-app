@@ -22,12 +22,12 @@ export default async function MistakesPage() {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
         <AlertCircle className="h-12 w-12 text-muted-foreground mb-4 opacity-40" />
-        <h2 className="text-lg font-semibold">No mistakes yet</h2>
+        <h2 className="text-lg font-semibold">Aucune erreur pour l&apos;instant</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Wrong and partial answers from practice will appear here.
+          Les réponses incorrectes et partielles de l&apos;entraînement apparaîtront ici.
         </p>
         <Button asChild className="mt-4">
-          <Link href="/subjects">Start practising</Link>
+          <Link href="/subjects">Commencer l&apos;entraînement</Link>
         </Button>
       </div>
     )
@@ -52,10 +52,10 @@ export default async function MistakesPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold">Mistakes</h1>
+        <h1 className="text-2xl font-bold">Erreurs</h1>
         <p className="text-muted-foreground mt-1">
-          {answers.length} question{answers.length !== 1 ? "s" : ""} to review across{" "}
-          {subjects.length} subject{subjects.length !== 1 ? "s" : ""}
+          {answers.length} question{answers.length !== 1 ? "s" : ""} à revoir dans{" "}
+          {subjects.length} matière{subjects.length !== 1 ? "s" : ""}
         </p>
       </div>
 
@@ -70,10 +70,10 @@ export default async function MistakesPage() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {wrong > 0 && (
-                    <Badge variant="error">{wrong} wrong</Badge>
+                    <Badge variant="error">{wrong} incorrect{wrong > 1 ? "es" : "e"}</Badge>
                   )}
                   {partial > 0 && (
-                    <Badge variant="warning">{partial} partial</Badge>
+                    <Badge variant="warning">{partial} partielle{partial > 1 ? "s" : ""}</Badge>
                   )}
                 </div>
               </CardContent>

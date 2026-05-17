@@ -19,13 +19,13 @@ export default async function AdminPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Admin Overview</h1>
+      <h1 className="text-2xl font-bold">Vue d&apos;ensemble</h1>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
-          { label: "Subjects", value: subjectCount ?? 0, icon: BookMarked, href: "/admin/subjects" },
+          { label: "Matières", value: subjectCount ?? 0, icon: BookMarked, href: "/admin/subjects" },
           { label: "Questions", value: questionCount ?? 0, icon: ClipboardList, href: "/admin/questions" },
-          { label: "Users", value: userCount ?? 0, icon: Users, href: "/admin/users" },
+          { label: "Utilisateurs", value: userCount ?? 0, icon: Users, href: "/admin/users" },
         ].map(({ label, value, icon: Icon, href }) => (
           <Card key={label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -35,7 +35,7 @@ export default async function AdminPage() {
             <CardContent className="space-y-2">
               <div className="text-2xl font-bold">{value}</div>
               <Button asChild variant="ghost" size="sm" className="-ml-2 text-xs">
-                <Link href={href}>Manage →</Link>
+                <Link href={href}>Gérer →</Link>
               </Button>
             </CardContent>
           </Card>

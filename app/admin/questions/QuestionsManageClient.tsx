@@ -118,7 +118,7 @@ export function QuestionsManageClient({ subjects }: Props) {
         difficulty: editingQuestion.difficulty || null,
       })
       if (res?.error) { toast.error(res.error); return }
-      toast.success("Question saved")
+      toast.success("Question sauvegardée")
       setQuestions((prev) =>
         prev.map((q) =>
           q.id === editingQuestion.id
@@ -136,11 +136,11 @@ export function QuestionsManageClient({ subjects }: Props) {
   }
 
   function handleDeleteQuestion(questionId: string) {
-    if (!confirm("Delete this question and all its options?")) return
+    if (!confirm("Supprimer cette question et toutes ses options ?")) return
     startTransition(async () => {
       const res = await deleteQuestion(questionId)
       if (res?.error) { toast.error(res.error); return }
-      toast.success("Question deleted")
+      toast.success("Question supprimée")
       setQuestions((prev) => prev.filter((q) => q.id !== questionId))
     })
   }
@@ -158,7 +158,7 @@ export function QuestionsManageClient({ subjects }: Props) {
         is_correct: editingOption.is_correct,
       })
       if (res?.error) { toast.error(res.error); return }
-      toast.success("Option saved")
+      toast.success("Option sauvegardée")
       setQuestions((prev) =>
         prev.map((q) =>
           q.id === questionId
@@ -208,9 +208,9 @@ export function QuestionsManageClient({ subjects }: Props) {
   }
 
   function handleCreateQuestion() {
-    if (!newQ.question_text.trim()) { toast.error("Question text is required"); return }
+    if (!newQ.question_text.trim()) { toast.error("Le texte de la question est obligatoire"); return }
     const validOptions = newQOptions.filter((o) => o.option_text.trim())
-    if (!validOptions.some((o) => o.is_correct)) { toast.error("At least one correct option is required"); return }
+    if (!validOptions.some((o) => o.is_correct)) { toast.error("Au moins une option correcte est requise"); return }
     startTransition(async () => {
       const res = await createQuestion(selectedSubjectId, {
         question_text: newQ.question_text,
@@ -219,7 +219,7 @@ export function QuestionsManageClient({ subjects }: Props) {
         options: validOptions,
       })
       if (res?.error) { toast.error(res.error); return }
-      toast.success("Question created")
+      toast.success("Question créée")
       setCreatingQuestion(false)
       setNewQ({ question_text: "", explanation: "", difficulty: "" })
       setNewQOptions([
@@ -236,11 +236,11 @@ export function QuestionsManageClient({ subjects }: Props) {
     <div className="space-y-6 max-w-3xl">
       {/* Subject selector */}
       <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Select subject</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sélectionner une matière</p>
         {subjects.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No subjects yet.{" "}
-            <a href="/admin/subjects" className="underline">Create one first.</a>
+            Aucune matière.{" "}
+            <a href="/admin/subjects" className="underline">Créez-en une d&apos;abord.</a>
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -278,42 +278,42 @@ export function QuestionsManageClient({ subjects }: Props) {
               }}
             >
               <Plus className="h-4 w-4 mr-2" />
-              New question
+              Nouvelle question
             </Button>
           </div>
 
-          {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+          {loading && <p className="text-sm text-muted-foreground">Chargement…</p>}
 
           {/* Create question form */}
           {creatingQuestion && (
             <Card className="border-primary/50">
               <CardContent className="pt-4 space-y-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Question text *</Label>
+                  <Label className="text-xs">Texte de la question *</Label>
                   <textarea
                     className={TEXTAREA_CLASS}
-                    placeholder="Enter question…"
+                    placeholder="Saisir la question…"
                     value={newQ.question_text}
                     onChange={(e) => setNewQ((prev) => ({ ...prev, question_text: e.target.value }))}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">Explanation</Label>
+                    <Label className="text-xs">Explication</Label>
                     <Input
-                      placeholder="Optional"
+                      placeholder="Optionnel"
                       value={newQ.explanation}
                       onChange={(e) => setNewQ((prev) => ({ ...prev, explanation: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Difficulty</Label>
+                    <Label className="text-xs">Difficulté</Label>
                     <select
                       className={SELECT_CLASS}
                       value={newQ.difficulty}
                       onChange={(e) => setNewQ((prev) => ({ ...prev, difficulty: e.target.value }))}
                     >
-                      <option value="">None</option>
+                      <option value="">Aucune</option>
                       {DIFFICULTIES.map((d) => (
                         <option key={d} value={d}>{d}</option>
                       ))}
@@ -321,7 +321,7 @@ export function QuestionsManageClient({ subjects }: Props) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Options — check the correct ones</Label>
+                  <Label className="text-xs">Options — cochez les correctes</Label>
                   {newQOptions.map((opt, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <Checkbox
@@ -359,15 +359,15 @@ export function QuestionsManageClient({ subjects }: Props) {
                     }
                   >
                     <Plus className="h-4 w-4 mr-1" />
-                    Add option
+                    Ajouter une option
                   </Button>
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" disabled={isPending} onClick={handleCreateQuestion}>
-                    {isPending ? "Saving…" : "Create question"}
+                    {isPending ? "Sauvegarde…" : "Créer la question"}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setCreatingQuestion(false)}>
-                    Cancel
+                    Annuler
                   </Button>
                 </div>
               </CardContent>
@@ -469,9 +469,9 @@ export function QuestionsManageClient({ subjects }: Props) {
                         {isEditingThis && (
                           <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1">
-                              <Label className="text-xs">Explanation</Label>
+                              <Label className="text-xs">Explication</Label>
                               <Input
-                                placeholder="Optional"
+                                placeholder="Optionnel"
                                 value={editingQuestion.explanation}
                                 onChange={(e) =>
                                   setEditingQuestion((prev) =>
@@ -481,7 +481,7 @@ export function QuestionsManageClient({ subjects }: Props) {
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-xs">Difficulty</Label>
+                              <Label className="text-xs">Difficulté</Label>
                               <select
                                 className={SELECT_CLASS}
                                 value={editingQuestion.difficulty}
@@ -491,7 +491,7 @@ export function QuestionsManageClient({ subjects }: Props) {
                                   )
                                 }
                               >
-                                <option value="">None</option>
+                                <option value="">Aucune</option>
                                 {DIFFICULTIES.map((d) => (
                                   <option key={d} value={d}>{d}</option>
                                 ))}
@@ -597,7 +597,7 @@ export function QuestionsManageClient({ subjects }: Props) {
                               />
                               <Input
                                 className="h-7 text-xs"
-                                placeholder="Option text…"
+                                placeholder="Texte de l'option…"
                                 value={newOption.option_text}
                                 autoFocus
                                 onChange={(e) =>
@@ -638,7 +638,7 @@ export function QuestionsManageClient({ subjects }: Props) {
                               }
                             >
                               <Plus className="h-3 w-3 mr-1" />
-                              Add option
+                              Ajouter une option
                             </Button>
                           )}
                         </div>
@@ -659,7 +659,7 @@ export function QuestionsManageClient({ subjects }: Props) {
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
               >
-                Previous
+                Précédent
               </Button>
               <span className="text-sm text-muted-foreground">
                 {page} / {totalPages}
@@ -670,14 +670,14 @@ export function QuestionsManageClient({ subjects }: Props) {
                 disabled={page === totalPages}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Next
+                Suivant
               </Button>
             </div>
           )}
 
           {!loading && questions.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">
-              No questions yet. Import some or create one above.
+              Aucune question. Importez-en ou créez-en une ci-dessus.
             </p>
           )}
         </div>
