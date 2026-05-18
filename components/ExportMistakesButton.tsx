@@ -8,9 +8,10 @@ import type { MistakeItem } from "./MistakesPDFDocument"
 interface Props {
   subjectName: string
   mistakes: MistakeItem[]
+  filenameSuffix?: string
 }
 
-export function ExportMistakesButton({ subjectName, mistakes }: Props) {
+export function ExportMistakesButton({ subjectName, mistakes, filenameSuffix }: Props) {
   const [loading, setLoading] = useState(false)
 
   async function handleExport() {
@@ -35,7 +36,8 @@ export function ExportMistakesButton({ subjectName, mistakes }: Props) {
       const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.href = url
-      link.download = `${subjectName.toLowerCase().replace(/\s+/g, "-")}-erreurs.pdf`
+      const suffix = filenameSuffix ? `-${filenameSuffix}` : ""
+      link.download = `${subjectName.toLowerCase().replace(/\s+/g, "-")}-erreurs${suffix}.pdf`
       link.click()
       URL.revokeObjectURL(url)
     } catch (err) {

@@ -23,7 +23,7 @@ export function TestMistakesActionsMenu({ subjectId, subjectName, mistakes, labe
 
   const actionButtons = (
     <>
-      <ExportMistakesButton subjectName={subjectName} mistakes={mistakes} />
+      <ExportMistakesButton subjectName={subjectName} mistakes={mistakes} filenameSuffix="test" />
       <Button variant="outline" size="sm" asChild>
         <Link href={`/mistakes/${subjectId}`}>
           <BookOpen className="h-3.5 w-3.5 me-1.5" />
@@ -54,7 +54,7 @@ export function TestMistakesActionsMenu({ subjectId, subjectName, mistakes, labe
               <SheetTitle>{labels.actions}</SheetTitle>
             </SheetHeader>
             <div className="flex flex-col gap-3 p-4">
-              <ExportMistakesButton subjectName={subjectName} mistakes={mistakes} />
+              <ExportMistakesButton subjectName={subjectName} mistakes={mistakes} filenameSuffix="test" />
               <Button variant="outline" size="sm" asChild onClick={() => setOpen(false)}>
                 <Link href={`/mistakes/${subjectId}`}>
                   <BookOpen className="h-3.5 w-3.5 me-1.5" />
