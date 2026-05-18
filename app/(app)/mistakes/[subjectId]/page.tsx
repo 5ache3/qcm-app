@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getServerT } from "@/lib/i18n"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, BookOpen } from "lucide-react"
+import { ArrowLeft, BookOpen, ClipboardList } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { QuestionStatusBadge } from "@/components/QuestionStatusBadge"
@@ -72,6 +72,12 @@ export default async function SubjectMistakesPage({ params }: Props) {
         </Button>
         <div className="flex items-center gap-2">
           <ExportMistakesButton subjectName={subject.name} mistakes={pdfMistakes} />
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/mistakes/${subjectId}/tests`}>
+              <ClipboardList className="h-3.5 w-3.5 me-1.5" />
+              {t.test_mistakes_btn}
+            </Link>
+          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href={`/subjects/${subjectId}/practice`}>
               <BookOpen className="h-3.5 w-3.5 me-1.5" />

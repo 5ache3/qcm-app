@@ -84,6 +84,10 @@ export type Dict = {
   practice_btn: string
   explanation_label: string
   to_review_count: string
+  test_mistakes_title: string
+  test_mistakes_empty: string
+  test_mistakes_btn: string
+  practice_mistakes_link: string
 
   // Practice
   select_all_correct: string
@@ -343,6 +347,10 @@ const fr: Dict = {
   practice_btn: "S'entraîner",
   explanation_label: "Explication",
   to_review_count: "questions à revoir",
+  test_mistakes_title: "Erreurs des tests",
+  test_mistakes_empty: "Aucune erreur dans les tests pour cette matière.",
+  test_mistakes_btn: "Erreurs des tests",
+  practice_mistakes_link: "Erreurs d'entraînement",
 
   // Practice
   select_all_correct: "Sélectionnez toutes les réponses correctes",
@@ -602,6 +610,10 @@ const ar: Dict = {
   practice_btn: "تدرّب",
   explanation_label: "الشرح",
   to_review_count: "أسئلة للمراجعة",
+  test_mistakes_title: "أخطاء الاختبارات",
+  test_mistakes_empty: "لا توجد أخطاء في الاختبارات لهذه المادة.",
+  test_mistakes_btn: "أخطاء الاختبارات",
+  practice_mistakes_link: "أخطاء التدريب",
 
   // Practice
   select_all_correct: "اختر جميع الإجابات الصحيحة",
