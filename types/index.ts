@@ -1,5 +1,14 @@
 export type UserRole = "student" | "admin"
 
+export interface Lesson {
+  id: string
+  subject_id: string
+  name: string
+  description: string | null
+  position: number
+  created_at: string
+}
+
 export interface Profile {
   id: string
   full_name: string
@@ -20,6 +29,7 @@ export interface Subject {
 export interface Question {
   id: string
   subject_id: string
+  lesson_id: string | null
   question_text: string
   explanation: string | null
   difficulty: string | null

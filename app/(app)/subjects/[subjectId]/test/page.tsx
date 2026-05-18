@@ -21,6 +21,7 @@ export default async function TestPage({ params }: Props) {
       .select("id")
       .eq("user_id", user!.id)
       .eq("subject_id", subjectId)
+      .is("lesson_id", null)
       .eq("status", "in_progress")
       .maybeSingle(),
   ])

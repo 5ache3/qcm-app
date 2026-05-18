@@ -23,8 +23,11 @@ export function RetakeButton({ testId, variant = "outline", size = "sm", iconOnl
   async function handleRetake() {
     setLoading(true)
     try {
-      const { subjectId } = await retakeTest(testId)
-      router.push(`/subjects/${subjectId}/test`)
+      const { subjectId, lessonId } = await retakeTest(testId)
+      const path = lessonId
+        ? `/subjects/${subjectId}/lessons/${lessonId}/test`
+        : `/subjects/${subjectId}/test`
+      router.push(path)
     } catch {
       toast.error(t.error_generic)
       setLoading(false)

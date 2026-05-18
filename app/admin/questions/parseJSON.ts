@@ -60,6 +60,9 @@ export function parseJSON(jsonText: string): { questions: ParsedQuestion[]; erro
     const rawDiff = typeof item.difficulty === "string" ? item.difficulty.toLowerCase().trim() : ""
     const difficulty = ["easy", "medium", "hard"].includes(rawDiff) ? rawDiff : null
 
+    const rawLesson = item.lesson ?? item.lesson_title ?? item.lesson_name ?? item.course ?? null
+    const lesson = typeof rawLesson === "string" && rawLesson.trim() ? rawLesson.trim() : null
+
     const rawOptions = item.options ?? item.answer_options ?? item.answers ?? item.choices
     if (!Array.isArray(rawOptions) || rawOptions.length === 0) {
       errors.push(`${label}: "${question_text.slice(0, 40)}" — missing options array, skipped`)
@@ -91,7 +94,7 @@ export function parseJSON(jsonText: string): { questions: ParsedQuestion[]; erro
       errors.push(`${label}: "${question_text.slice(0, 40)}" has no correct option marked`)
     }
 
-    questions.push({ question_text: question_text.trim(), explanation, difficulty, options })
+    questions.push({ question_text: question_text.trim(), explanation, difficulty, lesson, options })
   }
 
   return { questions, errors }

@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getServerT } from "@/lib/i18n"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { BookOpen, Timer, History, ArrowLeft } from "lucide-react"
+import { BookOpen, Timer, History, ArrowLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -18,27 +18,38 @@ export default async function SubjectPage({ params }: Props) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const [{ data: subject }, { count: questionCount }, { data: answers }, { data: recentTests }] =
-    await Promise.all([
-      supabase.from("subjects").select("*").eq("id", subjectId).single(),
-      supabase
-        .from("questions")
-        .select("*", { count: "exact", head: true })
-        .eq("subject_id", subjectId),
-      supabase
-        .from("practice_answers")
-        .select("status")
-        .eq("user_id", user!.id)
-        .eq("subject_id", subjectId),
-      supabase
-        .from("tests")
-        .select("id, started_at, percentage, status")
-        .eq("user_id", user!.id)
-        .eq("subject_id", subjectId)
-        .eq("status", "completed")
-        .order("started_at", { ascending: false })
-        .limit(3),
-    ])
+  const [
+    { data: subject },
+    { count: questionCount },
+    { data: answers },
+    { data: recentTests },
+    { data: lessons },
+  ] = await Promise.all([
+    supabase.from("subjects").select("*").eq("id", subjectId).single(),
+    supabase
+      .from("questions")
+      .select("*", { count: "exact", head: true })
+      .eq("subject_id", subjectId),
+    supabase
+      .from("practice_answers")
+      .select("status")
+      .eq("user_id", user!.id)
+      .eq("subject_id", subjectId),
+    supabase
+      .from("tests")
+      .select("id, started_at, percentage, status")
+      .eq("user_id", user!.id)
+      .eq("subject_id", subjectId)
+      .is("lesson_id", null)
+      .eq("status", "completed")
+      .order("started_at", { ascending: false })
+      .limit(3),
+    supabase
+      .from("lessons")
+      .select("id, name, description, position")
+      .eq("subject_id", subjectId)
+      .order("position"),
+  ])
 
   if (!subject) notFound()
 
@@ -86,53 +97,85 @@ export default async function SubjectPage({ params }: Props) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <BookOpen className="h-4 w-4" />
-              {t.card_practice_title}
-            </CardTitle>
-            <CardDescription>
-              Répondez aux questions une par une. Votre progression est sauvegardée automatiquement.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href={`/subjects/${subjectId}/practice`}>
-                {answered > 0 ? t.continue_practice : t.start_practice}
+      {/* Lessons section */}
+      {lessons && lessons.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="font-semibold">{t.lessons_section_title}</h2>
+          <div className="flex flex-col gap-2">
+            {lessons.map((lesson) => (
+              <Link
+                key={lesson.id}
+                href={`/subjects/${subjectId}/lessons/${lesson.id}`}
+                className="flex items-center justify-between rounded-lg border bg-card p-4 hover:bg-muted/50 transition-colors"
+              >
+                <div>
+                  <p className="font-medium text-sm">📖 {lesson.name}</p>
+                  {lesson.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{lesson.description}</p>
+                  )}
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </Link>
-            </Button>
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Timer className="h-4 w-4" />
-              {t.card_test_title}
-            </CardTitle>
-            <CardDescription>
-              20 questions aléatoires contre la montre. Score sauvegardé à la fin.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {canTakeTest ? (
-              <Button asChild variant="outline" className="w-full">
-                <Link href={`/subjects/${subjectId}/test`}>{t.start_test}</Link>
+      {/* Full subject practice & test */}
+      <div className="space-y-3">
+        {lessons && lessons.length > 0 && (
+          <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+            {t.full_subject_section}
+          </h2>
+        )}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <BookOpen className="h-4 w-4" />
+                {t.card_practice_title}
+              </CardTitle>
+              <CardDescription>
+                Répondez aux questions une par une. Votre progression est sauvegardée automatiquement.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link href={`/subjects/${subjectId}/practice`}>
+                  {answered > 0 ? t.continue_practice : t.start_practice}
+                </Link>
               </Button>
-            ) : (
-              <div className="space-y-2">
-                <Button disabled className="w-full" variant="outline">
-                  {t.start_test}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Timer className="h-4 w-4" />
+                {t.card_test_title}
+              </CardTitle>
+              <CardDescription>
+                20 questions aléatoires contre la montre. Score sauvegardé à la fin.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {canTakeTest ? (
+                <Button asChild variant="outline" className="w-full">
+                  <Link href={`/subjects/${subjectId}/test`}>{t.start_test}</Link>
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  {t.need_20_questions} ({questionCount ?? 0} disponibles)
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="space-y-2">
+                  <Button disabled className="w-full" variant="outline">
+                    {t.start_test}
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    {t.need_20_questions} ({questionCount ?? 0} disponibles)
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {recentTests && recentTests.length > 0 && (

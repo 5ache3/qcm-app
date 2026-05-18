@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useT } from "@/lib/i18n-client"
 import {
   getQuestionsForSubject,
+  getLessonsForSubjectAdmin,
   updateQuestion,
   deleteQuestion,
   updateAnswerOption,
@@ -26,9 +27,12 @@ type Question = {
   question_text: string
   explanation: string | null
   difficulty: string | null
+  lesson_id: string | null
+  lesson_name: string | null
   answer_options: AnswerOption[]
 }
 type Subject = { id: string; name: string; icon: string | null }
+type Lesson = { id: string; name: string }
 
 interface Props {
   subjects: Subject[]
@@ -47,6 +51,8 @@ export function QuestionsManageClient({ subjects }: Props) {
   const t = useT()
   const [selectedSubjectId, setSelectedSubjectId] = useState("")
   const [questions, setQuestions] = useState<Question[]>([])
+  const [lessons, setLessons] = useState<Lesson[]>([])
+  const [lessonFilter, setLessonFilter] = useState<string | null>(null) // null = all
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -57,6 +63,7 @@ export function QuestionsManageClient({ subjects }: Props) {
     question_text: string
     explanation: string
     difficulty: string
+    lesson_id: string
   } | null>(null)
   const [editingOption, setEditingOption] = useState<{
     id: string
@@ -70,7 +77,7 @@ export function QuestionsManageClient({ subjects }: Props) {
   } | null>(null)
 
   const [creatingQuestion, setCreatingQuestion] = useState(false)
-  const [newQ, setNewQ] = useState({ question_text: "", explanation: "", difficulty: "" })
+  const [newQ, setNewQ] = useState({ question_text: "", explanation: "", difficulty: "", lesson_id: "" })
   const [newQOptions, setNewQOptions] = useState([
     { option_text: "", is_correct: false },
     { option_text: "", is_correct: false },
@@ -80,8 +87,15 @@ export function QuestionsManageClient({ subjects }: Props) {
 
   async function loadQuestions(subjectId: string) {
     setLoading(true)
-    const data = await getQuestionsForSubject(subjectId)
-    setQuestions(data as Question[])
+    const [data, lessonData] = await Promise.all([
+      getQuestionsForSubject(subjectId),
+      getLessonsForSubjectAdmin(subjectId),
+    ])
+    setQuestions((data as any[]).map((q) => ({
+      ...q,
+      lesson_name: (q.lesson as { name: string } | null)?.name ?? null,
+    })) as Question[])
+    setLessons(lessonData as Lesson[])
     setLoading(false)
     setPage(1)
     setExpandedId(null)
@@ -93,11 +107,27 @@ export function QuestionsManageClient({ subjects }: Props) {
     setEditingOption(null)
     setNewOption(null)
     setCreatingQuestion(false)
+    setLessons([])
+    setLessonFilter(null)
     loadQuestions(id)
   }
 
-  const totalPages = Math.ceil(questions.length / PAGE_SIZE)
-  const pagedQuestions = questions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  function selectLessonFilter(id: string | null) {
+    setLessonFilter(id)
+    setPage(1)
+    setCreatingQuestion(false)
+    setEditingQuestion(null)
+    setExpandedId(null)
+  }
+
+  const filteredQuestions = lessonFilter === null
+    ? questions
+    : lessonFilter === "__none__"
+      ? questions.filter((q) => !q.lesson_id)
+      : questions.filter((q) => q.lesson_id === lessonFilter)
+
+  const totalPages = Math.ceil(filteredQuestions.length / PAGE_SIZE)
+  const pagedQuestions = filteredQuestions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   function startEditQuestion(q: Question) {
     setEditingQuestion({
@@ -105,6 +135,7 @@ export function QuestionsManageClient({ subjects }: Props) {
       question_text: q.question_text,
       explanation: q.explanation ?? "",
       difficulty: q.difficulty ?? "",
+      lesson_id: q.lesson_id ?? "",
     })
     setEditingOption(null)
     setNewOption(null)
@@ -113,14 +144,17 @@ export function QuestionsManageClient({ subjects }: Props) {
 
   function handleSaveQuestion() {
     if (!editingQuestion) return
+    const lessonId = editingQuestion.lesson_id || null
     startTransition(async () => {
       const res = await updateQuestion(editingQuestion.id, {
         question_text: editingQuestion.question_text,
         explanation: editingQuestion.explanation || null,
         difficulty: editingQuestion.difficulty || null,
+        lesson_id: lessonId,
       })
       if (res?.error) { toast.error(res.error); return }
       toast.success(t.admin_question_updated_toast)
+      const lessonName = lessonId ? (lessons.find((l) => l.id === lessonId)?.name ?? null) : null
       setQuestions((prev) =>
         prev.map((q) =>
           q.id === editingQuestion.id
@@ -129,6 +163,8 @@ export function QuestionsManageClient({ subjects }: Props) {
                 question_text: editingQuestion.question_text,
                 explanation: editingQuestion.explanation || null,
                 difficulty: editingQuestion.difficulty || null,
+                lesson_id: lessonId,
+                lesson_name: lessonName,
               }
             : q
         )
@@ -218,12 +254,14 @@ export function QuestionsManageClient({ subjects }: Props) {
         question_text: newQ.question_text,
         explanation: newQ.explanation || null,
         difficulty: newQ.difficulty || null,
+        lesson_id: newQ.lesson_id || null,
         options: validOptions,
       })
       if (res?.error) { toast.error(res.error); return }
       toast.success(t.admin_question_created_toast)
       setCreatingQuestion(false)
-      setNewQ({ question_text: "", explanation: "", difficulty: "" })
+      const defaultLesson = (lessonFilter && lessonFilter !== "__none__") ? lessonFilter : ""
+      setNewQ({ question_text: "", explanation: "", difficulty: "", lesson_id: defaultLesson })
       setNewQOptions([
         { option_text: "", is_correct: false },
         { option_text: "", is_correct: false },
@@ -268,11 +306,22 @@ export function QuestionsManageClient({ subjects }: Props) {
           <div className="flex items-center justify-between">
             <h2 className="font-semibold flex items-center gap-2">
               Questions
-              <Badge variant="secondary">{questions.length}</Badge>
+              <Badge variant="secondary">{filteredQuestions.length}</Badge>
+              {lessonFilter !== null && questions.length !== filteredQuestions.length && (
+                <span className="text-xs text-muted-foreground font-normal">/ {questions.length} total</span>
+              )}
             </h2>
             <Button
               size="sm"
               onClick={() => {
+                const defaultLesson = (lessonFilter && lessonFilter !== "__none__") ? lessonFilter : ""
+                setNewQ({ question_text: "", explanation: "", difficulty: "", lesson_id: defaultLesson })
+                setNewQOptions([
+                  { option_text: "", is_correct: false },
+                  { option_text: "", is_correct: false },
+                  { option_text: "", is_correct: true },
+                  { option_text: "", is_correct: false },
+                ])
                 setCreatingQuestion(true)
                 setExpandedId(null)
                 setEditingQuestion(null)
@@ -282,6 +331,48 @@ export function QuestionsManageClient({ subjects }: Props) {
               {t.admin_new_question}
             </Button>
           </div>
+
+          {/* Lesson filter pills */}
+          {lessons.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => selectLessonFilter(null)}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors border ${
+                  lessonFilter === null
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                Toutes ({questions.length})
+              </button>
+              {lessons.map((l) => {
+                const count = questions.filter((q) => q.lesson_id === l.id).length
+                return (
+                  <button
+                    key={l.id}
+                    onClick={() => selectLessonFilter(l.id)}
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors border ${
+                      lessonFilter === l.id
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    📖 {l.name} ({count})
+                  </button>
+                )
+              })}
+              <button
+                onClick={() => selectLessonFilter("__none__")}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors border ${
+                  lessonFilter === "__none__"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                Sans cours ({questions.filter((q) => !q.lesson_id).length})
+              </button>
+            </div>
+          )}
 
           {loading && <p className="text-sm text-muted-foreground">Chargement…</p>}
 
@@ -320,6 +411,21 @@ export function QuestionsManageClient({ subjects }: Props) {
                     </select>
                   </div>
                 </div>
+                {lessons.length > 0 && (
+                  <div className="space-y-1">
+                    <Label className="text-xs">{t.select_lesson_label}</Label>
+                    <select
+                      className={SELECT_CLASS}
+                      value={newQ.lesson_id}
+                      onChange={(e) => setNewQ((prev) => ({ ...prev, lesson_id: e.target.value }))}
+                    >
+                      <option value="">{t.no_lesson_option}</option>
+                      {lessons.map((l) => (
+                        <option key={l.id} value={l.id}>{l.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label className="text-xs">{t.admin_options_title}</Label>
                   {newQOptions.map((opt, i) => (
@@ -410,11 +516,18 @@ export function QuestionsManageClient({ subjects }: Props) {
                         ) : (
                           <>
                             <p className="text-sm font-medium leading-snug">{q.question_text}</p>
-                            {q.difficulty && (
-                              <Badge variant="outline" className="mt-1 text-xs capitalize">
-                                {q.difficulty}
-                              </Badge>
-                            )}
+                            <div className="flex items-center gap-1 mt-1 flex-wrap">
+                              {q.difficulty && (
+                                <Badge variant="outline" className="text-xs capitalize">
+                                  {q.difficulty}
+                                </Badge>
+                              )}
+                              {q.lesson_name && (
+                                <Badge variant="outline" className="text-xs font-normal">
+                                  📖 {q.lesson_name}
+                                </Badge>
+                              )}
+                            </div>
                           </>
                         )}
                       </div>
@@ -467,36 +580,57 @@ export function QuestionsManageClient({ subjects }: Props) {
                     {isExpanded && (
                       <div className="border-t px-4 pb-4 pt-3 space-y-3">
                         {isEditingThis && (
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                              <Label className="text-xs">{t.admin_explanation_label}</Label>
-                              <Input
-                                placeholder="Optionnel"
-                                value={editingQuestion.explanation}
-                                onChange={(e) =>
-                                  setEditingQuestion((prev) =>
-                                    prev ? { ...prev, explanation: e.target.value } : null
-                                  )
-                                }
-                              />
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs">{t.admin_explanation_label}</Label>
+                                <Input
+                                  placeholder="Optionnel"
+                                  value={editingQuestion.explanation}
+                                  onChange={(e) =>
+                                    setEditingQuestion((prev) =>
+                                      prev ? { ...prev, explanation: e.target.value } : null
+                                    )
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">{t.admin_difficulty_label}</Label>
+                                <select
+                                  className={SELECT_CLASS}
+                                  value={editingQuestion.difficulty}
+                                  onChange={(e) =>
+                                    setEditingQuestion((prev) =>
+                                      prev ? { ...prev, difficulty: e.target.value } : null
+                                    )
+                                  }
+                                >
+                                  <option value="">{t.admin_diff_none}</option>
+                                  <option value="easy">{t.admin_diff_easy}</option>
+                                  <option value="medium">{t.admin_diff_medium}</option>
+                                  <option value="hard">{t.admin_diff_hard}</option>
+                                </select>
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">{t.admin_difficulty_label}</Label>
-                              <select
-                                className={SELECT_CLASS}
-                                value={editingQuestion.difficulty}
-                                onChange={(e) =>
-                                  setEditingQuestion((prev) =>
-                                    prev ? { ...prev, difficulty: e.target.value } : null
-                                  )
-                                }
-                              >
-                                <option value="">{t.admin_diff_none}</option>
-                                <option value="easy">{t.admin_diff_easy}</option>
-                                <option value="medium">{t.admin_diff_medium}</option>
-                                <option value="hard">{t.admin_diff_hard}</option>
-                              </select>
-                            </div>
+                            {lessons.length > 0 && (
+                              <div className="space-y-1">
+                                <Label className="text-xs">{t.select_lesson_label}</Label>
+                                <select
+                                  className={SELECT_CLASS}
+                                  value={editingQuestion.lesson_id}
+                                  onChange={(e) =>
+                                    setEditingQuestion((prev) =>
+                                      prev ? { ...prev, lesson_id: e.target.value } : null
+                                    )
+                                  }
+                                >
+                                  <option value="">{t.no_lesson_option}</option>
+                                  {lessons.map((l) => (
+                                    <option key={l.id} value={l.id}>{l.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -673,9 +807,11 @@ export function QuestionsManageClient({ subjects }: Props) {
             </div>
           )}
 
-          {!loading && questions.length === 0 && (
+          {!loading && filteredQuestions.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">
-              {t.admin_no_questions}
+              {lessonFilter !== null && lessonFilter !== "__none__"
+                ? `Aucune question pour ce cours. Cliquez sur "Nouvelle question" pour en ajouter.`
+                : t.admin_no_questions}
             </p>
           )}
         </div>

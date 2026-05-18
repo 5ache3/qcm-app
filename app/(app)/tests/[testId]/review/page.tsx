@@ -60,6 +60,7 @@ export default async function TestReviewPage({ params }: Props) {
         id,
         question_text,
         explanation,
+        lesson:lessons(name),
         answer_options ( id, option_text, is_correct, position )
       )
     `)
@@ -142,7 +143,8 @@ export default async function TestReviewPage({ params }: Props) {
       <div className="space-y-4">
         <h2 className="font-semibold text-lg">{t.review_title}</h2>
         {testQuestions.map((tq) => {
-          const q = tq.questions as unknown as { question_text: string; explanation: string | null; answer_options: { id: string; option_text: string; is_correct: boolean; position: number }[] }
+          const q = tq.questions as unknown as { question_text: string; explanation: string | null; lesson: { name: string } | null; answer_options: { id: string; option_text: string; is_correct: boolean; position: number }[] }
+          const lessonName = q.lesson?.name ?? null
           const answer = answerMap.get(tq.question_id)
           const selectedIds: string[] = answer?.selected_option_ids ?? []
           const status = (answer?.status ?? "unanswered") as QuestionStatus
@@ -153,12 +155,17 @@ export default async function TestReviewPage({ params }: Props) {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                       <span>Q{tq.position}</span>
                       {tq.score !== null && (
                         <span className="font-medium">
                           {Number(tq.score).toFixed(2)} pts
                         </span>
+                      )}
+                      {lessonName && (
+                        <Badge variant="outline" className="text-xs font-normal">
+                          📖 {lessonName}
+                        </Badge>
                       )}
                     </div>
                     <CardTitle className="text-sm font-medium leading-relaxed">

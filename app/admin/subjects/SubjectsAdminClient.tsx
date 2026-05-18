@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useT } from "@/lib/i18n-client"
 import { createSubject, deleteSubject, updateSubjectDueDate } from "./actions"
+import { LessonsManager } from "./LessonsManager"
 
 interface Subject {
   id: string
@@ -141,45 +142,48 @@ export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Pro
           {subjects.map((subject) => (
             <div
               key={subject.id}
-              className="flex items-center justify-between rounded-lg border bg-card p-4"
+              className="rounded-lg border bg-card p-4"
             >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{subject.icon ?? "📚"}</span>
-                <div>
-                  <p className="font-medium">{subject.name}</p>
-                  {subject.description && (
-                    <p className="text-sm text-muted-foreground">{subject.description}</p>
-                  )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{subject.icon ?? "📚"}</span>
+                  <div>
+                    <p className="font-medium">{subject.name}</p>
+                    {subject.description && (
+                      <p className="text-sm text-muted-foreground">{subject.description}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <Label htmlFor={`due-${subject.id}`} className="text-xs text-muted-foreground whitespace-nowrap">
-                    Date limite
-                  </Label>
-                  <Input
-                    id={`due-${subject.id}`}
-                    type="date"
-                    className="h-7 w-36 text-xs cursor-pointer"
-                    defaultValue={subject.due_date ?? ""}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <Label htmlFor={`due-${subject.id}`} className="text-xs text-muted-foreground whitespace-nowrap">
+                      Date limite
+                    </Label>
+                    <Input
+                      id={`due-${subject.id}`}
+                      type="date"
+                      className="h-7 w-36 text-xs cursor-pointer"
+                      defaultValue={subject.due_date ?? ""}
+                      disabled={isPending}
+                      onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                      onChange={(e) => handleDueDateChange(subject.id, e.target.value)}
+                    />
+                  </div>
+                  <Badge variant="outline">
+                    {questionCountMap[subject.id] ?? 0} {t.nav_questions.toLowerCase()}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={() => handleDelete(subject.id, subject.name)}
                     disabled={isPending}
-                    onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
-                    onChange={(e) => handleDueDateChange(subject.id, e.target.value)}
-                  />
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Badge variant="outline">
-                  {questionCountMap[subject.id] ?? 0} {t.nav_questions.toLowerCase()}
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive"
-                  onClick={() => handleDelete(subject.id, subject.name)}
-                  disabled={isPending}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </div>
+              <LessonsManager subjectId={subject.id} />
             </div>
           ))}
         </div>

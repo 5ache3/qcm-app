@@ -33,6 +33,7 @@ interface Question {
   question_text: string
   explanation: string | null
   difficulty: string | null
+  lesson_name?: string | null
   answer_options: AnswerOption[]
 }
 
@@ -47,9 +48,10 @@ interface Props {
   questions: Question[]
   existingAnswers: Record<string, ExistingAnswer>
   userId: string
+  lesson?: { id: string; name: string }
 }
 
-export function PracticeClient({ subject, questions, existingAnswers, userId }: Props) {
+export function PracticeClient({ subject, questions, existingAnswers, userId, lesson }: Props) {
   const t = useT()
   const shuffledQuestions = questions
 
@@ -188,7 +190,10 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <span className="font-semibold text-sm">{subject.icon ?? "📚"} {subject.name}</span>
+          <div className="flex flex-col">
+            <span className="font-semibold text-sm">{subject.icon ?? "📚"} {subject.name}</span>
+            {lesson && <span className="text-xs text-muted-foreground">📖 {lesson.name}</span>}
+          </div>
         </div>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <span className="hidden sm:inline">{totalAnswered}/{shuffledQuestions.length} {t.answered_label}</span>
@@ -256,9 +261,16 @@ export function PracticeClient({ subject, questions, existingAnswers, userId }: 
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Q{currentIndex + 1} {t.question_of} {shuffledQuestions.length}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Q{currentIndex + 1} {t.question_of} {shuffledQuestions.length}
+                </span>
+                {!lesson && question.lesson_name && (
+                  <Badge variant="outline" className="text-xs font-normal">
+                    📖 {question.lesson_name}
+                  </Badge>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 {question.difficulty && (
                   <Badge variant="outline" className="text-xs capitalize">

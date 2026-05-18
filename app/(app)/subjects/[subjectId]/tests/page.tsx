@@ -37,7 +37,7 @@ export default async function SubjectTestsPage({ params }: Props) {
 
   const { data: tests } = await supabase
     .from("tests")
-    .select("id, started_at, duration_seconds, score, percentage, status, test_number, retake_of")
+    .select("id, started_at, duration_seconds, score, percentage, status, test_number, retake_of, lesson_id, lesson:lessons(name)")
     .eq("user_id", user!.id)
     .eq("subject_id", subjectId)
     .in("status", ["completed", "expired"])
@@ -76,6 +76,7 @@ export default async function SubjectTestsPage({ params }: Props) {
             const num = test.test_number as number | null
             const retakeOfId = test.retake_of as string | null
             const parentNum = retakeOfId ? numberById.get(retakeOfId) : null
+            const lessonName = (test.lesson as unknown as { name: string } | null)?.name ?? null
 
             return (
               <Card key={test.id} className="hover:shadow-sm transition-shadow">
@@ -91,6 +92,9 @@ export default async function SubjectTestsPage({ params }: Props) {
                             <span>↺</span>
                             <span>{t.test_label} #{parentNum}</span>
                           </span>
+                        )}
+                        {lessonName && (
+                          <Badge variant="outline" className="text-xs font-normal">📖 {lessonName}</Badge>
                         )}
                         {test.status === "expired" && (
                           <Badge variant="warning" className="text-xs">{t.test_expired}</Badge>

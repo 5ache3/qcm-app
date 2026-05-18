@@ -27,6 +27,7 @@ interface Question {
   question_text: string
   explanation: string | null
   difficulty: string | null
+  lesson_name?: string | null
   answer_options: AnswerOption[]
 }
 
@@ -49,9 +50,10 @@ interface Props {
   questionCount: number
   userId: string
   hasActiveTest: boolean
+  lesson?: { id: string; name: string }
 }
 
-export function TestClient({ subject, questionCount, userId, hasActiveTest }: Props) {
+export function TestClient({ subject, questionCount, userId, hasActiveTest, lesson }: Props) {
   const t = useT()
   const router = useRouter()
   const [phase, setPhase] = useState<Phase>("start")
@@ -125,7 +127,7 @@ export function TestClient({ subject, questionCount, userId, hasActiveTest }: Pr
   function handleStart() {
     startTransition(async () => {
       try {
-        const data = await startTest(subject.id)
+        const data = await startTest(subject.id, lesson?.id)
         const shuffledQuestions = data.questions.map((q) => ({
           ...q,
           answer_options: shuffleArray(q.answer_options),
@@ -191,6 +193,7 @@ export function TestClient({ subject, questionCount, userId, hasActiveTest }: Pr
           </div>
           <div>
             <h1 className="text-2xl font-bold">{subject.name}</h1>
+            {lesson && <p className="text-sm text-muted-foreground mt-0.5">📖 {lesson.name}</p>}
             <p className="text-muted-foreground mt-1">{t.card_test_title}</p>
           </div>
           <Card>
@@ -329,9 +332,16 @@ export function TestClient({ subject, questionCount, userId, hasActiveTest }: Pr
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              Q{currentIndex + 1} {t.question_of} {testData.questions.length}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Q{currentIndex + 1} {t.question_of} {testData.questions.length}
+              </span>
+              {!lesson && question.lesson_name && (
+                <Badge variant="outline" className="text-xs font-normal">
+                  📖 {question.lesson_name}
+                </Badge>
+              )}
+            </div>
             {question.difficulty && (
               <Badge variant="outline" className="text-xs capitalize">
                 {question.difficulty}

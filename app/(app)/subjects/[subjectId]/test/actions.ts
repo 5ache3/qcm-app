@@ -6,15 +6,15 @@ import type { QuestionStatus } from "@/lib/scoring"
 
 const TEST_DURATION_SECONDS = 20 * 60 // 20 minutes
 
-export async function startTest(subjectId: string) {
+export async function startTest(subjectId: string, lessonId?: string) {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) throw new Error("Not authenticated")
 
-  // Resume existing in-progress test if any
-  const { data: existing } = await supabase
+  // Resume existing in-progress test if any (scoped to subject or lesson)
+  let existingQuery = supabase
     .from("tests")
     .select("id, started_at")
     .eq("user_id", user.id)
@@ -22,7 +22,14 @@ export async function startTest(subjectId: string) {
     .eq("status", "in_progress")
     .order("started_at", { ascending: false })
     .limit(1)
-    .maybeSingle()
+
+  if (lessonId) {
+    existingQuery = existingQuery.eq("lesson_id", lessonId) as typeof existingQuery
+  } else {
+    existingQuery = existingQuery.is("lesson_id", null) as typeof existingQuery
+  }
+
+  const { data: existing } = await existingQuery.maybeSingle()
 
   let testId!: string
   let startedAt!: string
@@ -51,11 +58,12 @@ export async function startTest(subjectId: string) {
   }
 
   if (!isResume) {
-    // Pick 20 random questions
-    const { data: allQuestions } = await supabase
-      .from("questions")
-      .select("id")
-      .eq("subject_id", subjectId)
+    // Pick 20 random questions (from lesson if lessonId provided, otherwise from subject)
+    let questionsQuery = supabase.from("questions").select("id").eq("subject_id", subjectId)
+    if (lessonId) {
+      questionsQuery = questionsQuery.eq("lesson_id", lessonId) as typeof questionsQuery
+    }
+    const { data: allQuestions } = await questionsQuery
 
     if (!allQuestions || allQuestions.length < 20) {
       throw new Error("Not enough questions")
@@ -76,7 +84,13 @@ export async function startTest(subjectId: string) {
 
     const { data: test, error } = await supabase
       .from("tests")
-      .insert({ user_id: user.id, subject_id: subjectId, status: "in_progress", test_number: testNumber })
+      .insert({
+        user_id: user.id,
+        subject_id: subjectId,
+        lesson_id: lessonId ?? null,
+        status: "in_progress",
+        test_number: testNumber,
+      })
       .select("id, started_at")
       .single()
 
@@ -101,6 +115,8 @@ export async function startTest(subjectId: string) {
         question_text,
         explanation,
         difficulty,
+        lesson_id,
+        lesson:lessons(name),
         answer_options (
           id,
           option_text,
@@ -119,6 +135,7 @@ export async function startTest(subjectId: string) {
       question_text: q.question_text as string,
       explanation: q.explanation as string | null,
       difficulty: q.difficulty as string | null,
+      lesson_name: (q.lesson as { name: string } | null)?.name ?? null,
       answer_options: ([...q.answer_options] as any[])
         .sort((a, b) => a.position - b.position)
         .map((o) => ({
@@ -208,12 +225,13 @@ export async function retakeTest(originalTestId: string) {
 
   const { data: original } = await supabase
     .from("tests")
-    .select("subject_id")
+    .select("subject_id, lesson_id")
     .eq("id", originalTestId)
     .eq("user_id", user.id)
     .single()
 
   if (!original) throw new Error("Test not found")
+  const lessonId = original.lesson_id as string | null
 
   const { data: originalQuestions } = await supabase
     .from("test_questions")
@@ -223,13 +241,20 @@ export async function retakeTest(originalTestId: string) {
 
   if (!originalQuestions?.length) throw new Error("No questions found")
 
-  // Expire any existing in-progress test for this subject so startTest resumes the retake
-  await supabase
+  // Expire any existing in-progress test for same scope (subject or lesson)
+  let expireQuery = supabase
     .from("tests")
     .update({ status: "expired", completed_at: new Date().toISOString() })
     .eq("user_id", user.id)
     .eq("subject_id", original.subject_id)
     .eq("status", "in_progress")
+
+  if (lessonId) {
+    expireQuery = expireQuery.eq("lesson_id", lessonId) as typeof expireQuery
+  } else {
+    expireQuery = expireQuery.is("lesson_id", null) as typeof expireQuery
+  }
+  await expireQuery
 
   const { data: maxTest } = await supabase
     .from("tests")
@@ -247,6 +272,7 @@ export async function retakeTest(originalTestId: string) {
     .insert({
       user_id: user.id,
       subject_id: original.subject_id,
+      lesson_id: lessonId,
       status: "in_progress",
       retake_of: originalTestId,
       test_number: testNumber,
@@ -264,7 +290,7 @@ export async function retakeTest(originalTestId: string) {
     }))
   )
 
-  return { subjectId: original.subject_id as string }
+  return { subjectId: original.subject_id as string, lessonId }
 }
 
 export async function submitTest(

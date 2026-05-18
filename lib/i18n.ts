@@ -260,6 +260,23 @@ export type Dict = {
   admin_user_recent_tests: string
   admin_user_unknown: string
 
+  // Lessons
+  lessons_section_title: string
+  lesson_label: string
+  lesson_practice_btn: string
+  lesson_test_btn: string
+  full_subject_section: string
+  add_lesson_btn: string
+  lesson_name_label: string
+  lesson_description_label: string
+  lesson_create_toast: string
+  lesson_update_toast: string
+  lesson_delete_toast: string
+  lesson_delete_confirm: string
+  lesson_no_lessons: string
+  select_lesson_label: string
+  no_lesson_option: string
+
   // Common
   back: string
   error_generic: string
@@ -523,6 +540,23 @@ const fr: Dict = {
   admin_user_recent_tests: "Tests récents",
   admin_user_unknown: "Inconnu",
 
+  // Lessons
+  lessons_section_title: "Cours",
+  lesson_label: "Cours",
+  lesson_practice_btn: "S'entraîner",
+  lesson_test_btn: "Tester",
+  full_subject_section: "Matière complète",
+  add_lesson_btn: "Ajouter un cours",
+  lesson_name_label: "Nom du cours",
+  lesson_description_label: "Description (optionnel)",
+  lesson_create_toast: "Cours créé",
+  lesson_update_toast: "Cours mis à jour",
+  lesson_delete_toast: "Cours supprimé",
+  lesson_delete_confirm: "Supprimer ce cours ?",
+  lesson_no_lessons: "Aucun cours pour l'instant.",
+  select_lesson_label: "Cours (optionnel)",
+  no_lesson_option: "Aucun cours",
+
   // Common
   back: "Retour",
   error_generic: "Une erreur est survenue",
@@ -785,6 +819,23 @@ const ar: Dict = {
   admin_user_practice_by_subject: "التدريب حسب المادة",
   admin_user_recent_tests: "الاختبارات الأخيرة",
   admin_user_unknown: "غير معروف",
+
+  // Lessons
+  lessons_section_title: "الدروس",
+  lesson_label: "الدرس",
+  lesson_practice_btn: "تدرّب",
+  lesson_test_btn: "اختبار",
+  full_subject_section: "المادة كاملة",
+  add_lesson_btn: "إضافة درس",
+  lesson_name_label: "اسم الدرس",
+  lesson_description_label: "الوصف (اختياري)",
+  lesson_create_toast: "تم إنشاء الدرس",
+  lesson_update_toast: "تم تحديث الدرس",
+  lesson_delete_toast: "تم حذف الدرس",
+  lesson_delete_confirm: "حذف هذا الدرس؟",
+  lesson_no_lessons: "لا توجد دروس بعد.",
+  select_lesson_label: "الدرس (اختياري)",
+  no_lesson_option: "بدون درس",
 
   // Common
   back: "رجوع",

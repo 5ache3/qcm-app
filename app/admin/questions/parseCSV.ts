@@ -8,6 +8,7 @@ export interface ParsedQuestion {
   question_text: string
   explanation: string | null
   difficulty: string | null
+  lesson: string | null
   options: ParsedOption[]
 }
 
@@ -87,7 +88,7 @@ export function parseCSV(csvText: string): { questions: ParsedQuestion[]; errors
       errors.push(`Row ${i + 1}: "${question_text.slice(0, 40)}" has no correct option marked`)
     }
 
-    questions.push({ question_text, explanation, difficulty, options })
+    questions.push({ question_text, explanation, difficulty, lesson: null, options })
   }
 
   return { questions, errors }

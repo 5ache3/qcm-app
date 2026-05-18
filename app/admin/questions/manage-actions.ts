@@ -8,7 +8,8 @@ export async function getQuestionsForSubject(subjectId: string) {
   const { data } = await supabase
     .from("questions")
     .select(`
-      id, question_text, explanation, difficulty, created_at,
+      id, question_text, explanation, difficulty, lesson_id, created_at,
+      lesson:lessons(name),
       answer_options ( id, option_text, is_correct, position )
     `)
     .eq("subject_id", subjectId)
@@ -16,9 +17,29 @@ export async function getQuestionsForSubject(subjectId: string) {
   return data ?? []
 }
 
+export async function getLessonsForSubjectAdmin(subjectId: string) {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("lessons")
+    .select("id, name")
+    .eq("subject_id", subjectId)
+    .order("position")
+  return data ?? []
+}
+
+export async function updateQuestionLesson(questionId: string, lessonId: string | null) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("questions")
+    .update({ lesson_id: lessonId, updated_at: new Date().toISOString() })
+    .eq("id", questionId)
+  if (error) return { error: error.message }
+  return { success: true }
+}
+
 export async function updateQuestion(
   questionId: string,
-  fields: { question_text: string; explanation: string | null; difficulty: string | null }
+  fields: { question_text: string; explanation: string | null; difficulty: string | null; lesson_id?: string | null }
 ) {
   const supabase = await createClient()
   const { error } = await supabase
@@ -73,13 +94,20 @@ export async function createQuestion(
     question_text: string
     explanation: string | null
     difficulty: string | null
+    lesson_id?: string | null
     options: { option_text: string; is_correct: boolean }[]
   }
 ) {
   const supabase = await createClient()
   const { data: question, error } = await supabase
     .from("questions")
-    .insert({ subject_id: subjectId, question_text: fields.question_text, explanation: fields.explanation, difficulty: fields.difficulty })
+    .insert({
+      subject_id: subjectId,
+      question_text: fields.question_text,
+      explanation: fields.explanation,
+      difficulty: fields.difficulty,
+      lesson_id: fields.lesson_id ?? null,
+    })
     .select("id")
     .single()
   if (error || !question) return { error: error?.message ?? "Failed to create question" }

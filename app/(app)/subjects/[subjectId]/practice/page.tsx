@@ -23,6 +23,8 @@ export default async function PracticePage({ params }: Props) {
         question_text,
         explanation,
         difficulty,
+        lesson_id,
+        lesson:lessons(name),
         answer_options (
           id,
           option_text,
@@ -36,9 +38,10 @@ export default async function PracticePage({ params }: Props) {
 
   if (!subject || !questions) notFound()
 
-  // Sort options by position then shuffle for variety
+  // Sort options by position then shuffle for variety; flatten lesson name
   const questionsWithSortedOptions = questions.map((q) => ({
     ...q,
+    lesson_name: (q.lesson as unknown as { name: string } | null)?.name ?? null,
     answer_options: shuffleArray([...(q.answer_options ?? [])].sort((a, b) => a.position - b.position)),
   }))
 
