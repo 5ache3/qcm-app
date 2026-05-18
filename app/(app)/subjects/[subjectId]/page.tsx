@@ -46,12 +46,19 @@ export default async function SubjectPage({ params }: Props) {
       .limit(3),
     supabase
       .from("lessons")
-      .select("id, name, description, position")
+      .select("id, name, description, position, questions(count)")
       .eq("subject_id", subjectId)
       .order("position"),
   ])
 
   if (!subject) notFound()
+
+  const lessonsWithQuestions = (lessons ?? [])
+    .map((l) => ({
+      ...l,
+      questionCount: (l.questions as unknown as { count: number }[])?.[0]?.count ?? 0,
+    }))
+    .filter((l) => l.questionCount > 0)
 
   const answered = answers?.length ?? 0
   const correct = answers?.filter((a) => a.status === "correct").length ?? 0
@@ -98,11 +105,11 @@ export default async function SubjectPage({ params }: Props) {
       </div>
 
       {/* Lessons section */}
-      {lessons && lessons.length > 0 && (
+      {lessonsWithQuestions.length > 0 && (
         <div className="space-y-3">
           <h2 className="font-semibold">{t.lessons_section_title}</h2>
           <div className="flex flex-col gap-2">
-            {lessons.map((lesson) => (
+            {lessonsWithQuestions.map((lesson) => (
               <Link
                 key={lesson.id}
                 href={`/subjects/${subjectId}/lessons/${lesson.id}`}
@@ -114,7 +121,12 @@ export default async function SubjectPage({ params }: Props) {
                     <p className="text-xs text-muted-foreground mt-0.5">{lesson.description}</p>
                   )}
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant="secondary" className="text-xs">
+                    {lesson.questionCount} {t.nav_questions.toLowerCase()}
+                  </Badge>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
               </Link>
             ))}
           </div>
@@ -123,7 +135,7 @@ export default async function SubjectPage({ params }: Props) {
 
       {/* Full subject practice & test */}
       <div className="space-y-3">
-        {lessons && lessons.length > 0 && (
+        {lessonsWithQuestions.length > 0 && (
           <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
             {t.full_subject_section}
           </h2>
