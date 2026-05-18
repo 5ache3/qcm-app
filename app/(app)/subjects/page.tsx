@@ -8,7 +8,6 @@ import { Progress } from "@/components/ui/progress"
 
 function sortSubjectsByDueDate<T extends { due_date: string | null }>(subjects: T[]): T[] {
   const today = new Date()
-  today.setHours(12, 0, 0, 0)
 
   return [...subjects].sort((a, b) => {
     const da = a.due_date ? new Date(a.due_date + "T12:00:00") : null
@@ -77,7 +76,6 @@ export default async function SubjectsPage() {
           const progressPct = answered > 0 ? Math.round((correct / answered) * 100) : 0
 
           const today = new Date()
-          today.setHours(12, 0, 0, 0)
           const dueDate = subject.due_date ? new Date(subject.due_date + "T12:00:00") : null
           const isPastDue = dueDate ? dueDate < today : false
           const daysUntilDue = dueDate ? Math.round((dueDate.getTime() - today.getTime()) / 86400000) : null
