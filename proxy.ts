@@ -31,7 +31,8 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  if (!user && !pathname.startsWith("/login")) {
+  const publicPaths = ["/login", "/api/mistakes/typst"]
+  if (!user && !publicPaths.some((p) => pathname.startsWith(p))) {
     return NextResponse.redirect(new URL("/login", request.url))
   }
 
