@@ -132,7 +132,7 @@ function cardBlock(item: MistakeItem, num: number): string {
     : ""
 
   return (
-    `block(fill: white, radius: 8pt, stroke: 1pt + rgb("#e2e8f0"), inset: 10pt, width: 100%)[` +
+    `block(fill: white, radius: 8pt, stroke: 1pt + rgb("#e2e8f0"), inset: 10pt, width: 100%, breakable: false)[` +
       `#text(size: 7.5pt, weight: "bold", fill: rgb("#64748b"))[Q.${num}]` +
       `#v(3pt)` +
       `#grid(columns: (1fr, auto), align: (left + horizon, right + horizon),` +

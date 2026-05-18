@@ -161,7 +161,7 @@ function QuestionCard({ item, num }: { item: MistakeItem; num: number }) {
   const label = item.status === "wrong" ? "Incorrect" : "Partiel"
 
   return (
-    <View style={s.card}>
+    <View style={s.card} wrap={false}>
       <Text style={s.qNum}>Q.{num}</Text>
       <View style={s.cardTop}>
         <Text style={s.qText}>{item.question_text}</Text>
@@ -241,7 +241,7 @@ export function MistakesPDFDocument({
         </View>
 
         {pairs.map(([a, b], i) => (
-          <View key={i} style={s.row}>
+          <View key={i} style={s.row} wrap={false}>
             <View style={s.colL}>
               <QuestionCard item={a} num={i * 2 + 1} />
             </View>
