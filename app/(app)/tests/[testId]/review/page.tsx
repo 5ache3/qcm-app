@@ -96,8 +96,8 @@ export default async function TestReviewPage({ params }: Props) {
           pct >= 80
             ? "border-green-300 bg-green-50 dark:bg-green-950/20"
             : pct >= 50
-            ? "border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20"
-            : "border-red-300 bg-red-50 dark:bg-red-950/20"
+              ? "border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20"
+              : "border-red-300 bg-red-50 dark:bg-red-950/20"
         }
       >
         <CardContent className="pt-6 pb-6 text-center space-y-2">
@@ -175,7 +175,7 @@ export default async function TestReviewPage({ params }: Props) {
 
                   let style = "border-border bg-background text-muted-foreground"
                   if (isCorrect && isSelected) {
-                    style = "border-green-500 bg-green-50 dark:bg-green-950/20 text-green-800 dark:text-green-200"
+                    style = "border-green-600 bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100"
                   } else if (isCorrect && !isSelected) {
                     style = "border-green-300 bg-green-50/50 dark:bg-green-950/10 text-green-700 dark:text-green-300"
                   } else if (!isCorrect && isSelected) {

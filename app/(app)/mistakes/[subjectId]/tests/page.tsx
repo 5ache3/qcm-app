@@ -59,9 +59,9 @@ export default async function SubjectTestMistakesPage({ params }: Props) {
   const rawAnswers: RawAnswer[] =
     testIds.length > 0
       ? ((
-          await supabase
-            .from("test_answers")
-            .select(`
+        await supabase
+          .from("test_answers")
+          .select(`
               question_id,
               test_id,
               selected_option_ids,
@@ -73,9 +73,9 @@ export default async function SubjectTestMistakesPage({ params }: Props) {
                 answer_options ( id, option_text, is_correct, position )
               )
             `)
-            .in("test_id", testIds)
-            .in("status", ["wrong", "partial"])
-        ).data as RawAnswer[] | null) ?? []
+          .in("test_id", testIds)
+          .in("status", ["wrong", "partial"])
+      ).data as RawAnswer[] | null) ?? []
       : []
 
   // For each question keep the answer from the most recent test (lowest index in userTests)
@@ -175,7 +175,7 @@ export default async function SubjectTestMistakesPage({ params }: Props) {
 
                       let style = "border-border bg-background text-muted-foreground"
                       if (isCorrect && isSelected) {
-                        style = "border-green-500 bg-green-50 dark:bg-green-950/20 text-green-800 dark:text-green-200"
+                        style = "border-green-600 bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100"
                       } else if (isCorrect && !isSelected) {
                         style = "border-green-300 bg-green-50/50 dark:bg-green-950/10 text-green-700 dark:text-green-300"
                       } else if (!isCorrect && isSelected) {
