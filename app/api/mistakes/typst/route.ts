@@ -221,8 +221,7 @@ function generateTypst(
   paper: "a4",
   fill: rgb("#f1f5f9"),
   margin: (x: 24pt, top: 24pt, bottom: 40pt),
-  numbering: "1 / 1",
-  number-align: right + bottom,
+  footer: align(right, text(size: 7.5pt, fill: rgb("#94a3b8"))[#context counter(page).display("1 / 1", both: true)]),
 )
 #set text(font: ("Helvetica", "Arial", "Liberation Sans"), size: 9pt, fill: rgb("#0f172a"))
 #set par(leading: 0.65em)
