@@ -32,7 +32,7 @@ export default async function SubjectPage({ params }: Props) {
       .eq("subject_id", subjectId),
     supabase
       .from("practice_answers")
-      .select("status")
+      .select("status, question_id, questions(lesson_id)")
       .eq("user_id", user!.id)
       .eq("subject_id", subjectId),
     supabase
@@ -53,17 +53,27 @@ export default async function SubjectPage({ params }: Props) {
 
   if (!subject) notFound()
 
+  type AnswerRow = { status: string; question_id: string; questions: { lesson_id: string | null } | null }
+  const answerRows = (answers ?? []) as unknown as AnswerRow[]
+
+  const lessonAnsweredMap = new Map<string, number>()
+  for (const a of answerRows) {
+    const lid = a.questions?.lesson_id
+    if (lid) lessonAnsweredMap.set(lid, (lessonAnsweredMap.get(lid) ?? 0) + 1)
+  }
+
   const lessonsWithQuestions = (lessons ?? [])
     .map((l) => ({
       ...l,
       questionCount: (l.questions as unknown as { count: number }[])?.[0]?.count ?? 0,
+      answeredCount: lessonAnsweredMap.get(l.id) ?? 0,
     }))
     .filter((l) => l.questionCount > 0)
 
-  const answered = answers?.length ?? 0
-  const correct = answers?.filter((a) => a.status === "correct").length ?? 0
-  const partial = answers?.filter((a) => a.status === "partial").length ?? 0
-  const wrong = answers?.filter((a) => a.status === "wrong").length ?? 0
+  const answered = answerRows.length
+  const correct = answerRows.filter((a) => a.status === "correct").length
+  const partial = answerRows.filter((a) => a.status === "partial").length
+  const wrong = answerRows.filter((a) => a.status === "wrong").length
   const canTakeTest = (questionCount ?? 0) >= 20
   const locale = lang === "ar" ? "ar-MA" : "fr-FR"
 
@@ -122,8 +132,11 @@ export default async function SubjectPage({ params }: Props) {
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <Badge variant="secondary" className="text-xs">
-                    {lesson.questionCount} {t.nav_questions.toLowerCase()}
+                  <Badge
+                    variant="secondary"
+                    className={`text-xs ${lesson.answeredCount === lesson.questionCount && lesson.questionCount > 0 ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400" : ""}`}
+                  >
+                    {lesson.answeredCount}/{lesson.questionCount}
                   </Badge>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
