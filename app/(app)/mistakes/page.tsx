@@ -1,10 +1,33 @@
 import { createClient } from "@/lib/supabase/server"
 import { getServerT } from "@/lib/i18n"
 import Link from "next/link"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Calendar } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+
+type SubjectEntry = {
+  subject: { id: string; name: string; icon: string | null; due_date: string | null }
+  wrong: number
+  partial: number
+}
+
+function sortByDueDate(subjects: SubjectEntry[]): SubjectEntry[] {
+  const today = new Date()
+  return [...subjects].sort((a, b) => {
+    const da = a.subject.due_date ? new Date(a.subject.due_date + "T12:00:00") : null
+    const db = b.subject.due_date ? new Date(b.subject.due_date + "T12:00:00") : null
+    const aPast = da ? da < today : false
+    const bPast = db ? db < today : false
+
+    if (aPast !== bPast) return aPast ? 1 : -1
+    if (da && db && !aPast && !bPast) return da.getTime() - db.getTime()
+    if (!da && !db) return 0
+    if (!da) return 1
+    if (!db) return -1
+    return db.getTime() - da.getTime()
+  })
+}
 
 export default async function MistakesPage() {
   const [supabase, { t }] = await Promise.all([createClient(), getServerT()])
@@ -14,7 +37,7 @@ export default async function MistakesPage() {
 
   const { data: answers } = await supabase
     .from("practice_answers")
-    .select("subject_id, status, subjects(id, name, icon)")
+    .select("subject_id, status, subjects(id, name, icon, due_date)")
     .eq("user_id", user!.id)
     .in("status", ["wrong", "partial"])
 
@@ -33,9 +56,9 @@ export default async function MistakesPage() {
     )
   }
 
-  const bySubject = new Map<string, { subject: { id: string; name: string; icon: string | null }; wrong: number; partial: number }>()
+  const bySubject = new Map<string, SubjectEntry>()
   for (const a of answers) {
-    const sub = a.subjects as unknown as { id: string; name: string; icon: string | null }
+    const sub = a.subjects as unknown as { id: string; name: string; icon: string | null; due_date: string | null }
     if (!bySubject.has(sub.id)) {
       bySubject.set(sub.id, { subject: sub, wrong: 0, partial: 0 })
     }
@@ -44,9 +67,8 @@ export default async function MistakesPage() {
     else entry.partial++
   }
 
-  const subjects = Array.from(bySubject.values()).sort(
-    (a, b) => (b.wrong + b.partial) - (a.wrong + a.partial)
-  )
+  const today = new Date()
+  const subjects = sortByDueDate(Array.from(bySubject.values()))
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
@@ -58,26 +80,44 @@ export default async function MistakesPage() {
       </div>
 
       <div className="flex flex-col space-y-1">
-        {subjects.map(({ subject, wrong, partial }) => (
-          <Link key={subject.id} href={`/mistakes/${subject.id}`}>
-            <Card className="hover:bg-muted/40 transition-colors cursor-pointer">
-              <CardContent className="py-4 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{subject.icon ?? "📚"}</span>
-                  <span className="font-medium">{subject.name}</span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {wrong > 0 && (
-                    <Badge variant="error">{wrong} {t.stat_incorrect.toLowerCase()}</Badge>
-                  )}
-                  {partial > 0 && (
-                    <Badge variant="warning">{partial} {t.stat_partial.toLowerCase()}</Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+        {subjects.map(({ subject, wrong, partial }) => {
+          const dueDate = subject.due_date ? new Date(subject.due_date + "T12:00:00") : null
+          const isPastDue = dueDate ? dueDate < today : false
+          const daysUntilDue = dueDate ? Math.round((dueDate.getTime() - today.getTime()) / 86400000) : null
+
+          return (
+            <Link key={subject.id} href={`/mistakes/${subject.id}`}>
+              <Card className={`hover:bg-muted/40 transition-colors cursor-pointer ${isPastDue ? "opacity-60" : ""}`}>
+                <CardContent className="py-4 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-2xl">{subject.icon ?? "📚"}</span>
+                    <div className="min-w-0">
+                      <span className="font-medium">{subject.name}</span>
+                      {dueDate && (
+                        <div className={`flex items-center gap-1 text-xs mt-0.5 ${isPastDue ? "text-destructive" : "text-muted-foreground"}`}>
+                          <Calendar className="h-3 w-3 shrink-0" />
+                          {isPastDue
+                            ? `Expiré le ${dueDate.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`
+                            : daysUntilDue === 0
+                              ? "Aujourd'hui"
+                              : `Dans ${daysUntilDue} j — ${dueDate.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {wrong > 0 && (
+                      <Badge variant="error">{wrong} {t.stat_incorrect.toLowerCase()}</Badge>
+                    )}
+                    {partial > 0 && (
+                      <Badge variant="warning">{partial} {t.stat_partial.toLowerCase()}</Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          )
+        })}
       </div>
     </div>
   )
