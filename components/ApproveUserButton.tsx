@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { CheckCircle } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -9,6 +10,7 @@ import { useT } from "@/lib/i18n-client"
 
 export function ApproveUserButton({ userId }: { userId: string }) {
   const t = useT()
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -17,6 +19,7 @@ export function ApproveUserButton({ userId }: { userId: string }) {
     const result = await approveUser(userId)
     if (result.success) {
       setDone(true)
+      router.refresh()
     } else {
       toast.error(t.error_generic)
       setLoading(false)
