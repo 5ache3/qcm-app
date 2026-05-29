@@ -43,3 +43,16 @@ export async function deleteSubject(subjectId: string) {
   revalidatePath("/subjects")
   return { success: true }
 }
+
+export async function assignSubjectToClass(subjectId: string, classId: string | null) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("subjects")
+    .update({ class_id: classId })
+    .eq("id", subjectId)
+  if (error) return { error: error.message }
+
+  revalidatePath("/admin/subjects")
+  revalidatePath("/subjects")
+  return { success: true }
+}

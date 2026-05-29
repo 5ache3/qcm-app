@@ -10,15 +10,16 @@ import {
   Users,
   ClipboardList,
   BarChart2,
+  GraduationCap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useT } from "@/lib/i18n-client"
 
 interface Props {
-  isAdmin: boolean
+  role: string
 }
 
-export function MobileNav({ isAdmin }: Props) {
+export function MobileNav({ role }: Props) {
   const t = useT()
   const pathname = usePathname()
 
@@ -26,6 +27,11 @@ export function MobileNav({ isAdmin }: Props) {
     { href: "/dashboard", label: t.nav_home, icon: LayoutDashboard },
     { href: "/subjects", label: t.nav_subjects, icon: BookMarked },
     { href: "/mistakes", label: t.nav_mistakes, icon: AlertCircle },
+    { href: "/profile", label: t.nav_profile, icon: UserCircle },
+  ]
+
+  const tutorNav = [
+    { href: "/tutor", label: "Classes", icon: GraduationCap },
     { href: "/profile", label: t.nav_profile, icon: UserCircle },
   ]
 
@@ -37,7 +43,7 @@ export function MobileNav({ isAdmin }: Props) {
     { href: "/admin/analytics", label: t.nav_analytics, icon: BarChart2 },
   ]
 
-  const navItems = isAdmin ? adminNav : studentNav
+  const navItems = role === "admin" ? adminNav : role === "tutor" ? tutorNav : studentNav
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t bg-card md:hidden">

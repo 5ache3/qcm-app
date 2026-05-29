@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useT } from "@/lib/i18n-client"
-import { createSubject, deleteSubject, updateSubjectDueDate } from "./actions"
+import { createSubject, deleteSubject, updateSubjectDueDate, assignSubjectToClass } from "./actions"
 import { LessonsManager } from "./LessonsManager"
 
 interface Subject {
@@ -18,12 +18,19 @@ interface Subject {
   description: string | null
   icon: string | null
   due_date: string | null
+  class_id: string | null
   created_at: string
+}
+
+interface ClassOption {
+  id: string
+  name: string
 }
 
 interface Props {
   subjects: Subject[]
   questionCountMap: Record<string, number>
+  classes: ClassOption[]
 }
 
 function sortByDueDate(subjects: Subject[]): Subject[] {
@@ -43,7 +50,7 @@ function sortByDueDate(subjects: Subject[]): Subject[] {
   })
 }
 
-export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Props) {
+export function SubjectsAdminClient({ subjects: initial, questionCountMap, classes }: Props) {
   const t = useT()
   const [subjects, setSubjects] = useState(() => sortByDueDate(initial))
   const [showForm, setShowForm] = useState(false)
@@ -73,6 +80,17 @@ export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Pro
         sortByDueDate(prev.map((s) => (s.id === id ? { ...s, due_date: value || null } : s)))
       )
       toast.success("Date limite mise à jour")
+    })
+  }
+
+  function handleClassChange(id: string, classId: string) {
+    startTransition(async () => {
+      const result = await assignSubjectToClass(id, classId || null)
+      if (result.error) { toast.error(result.error); return }
+      setSubjects((prev) =>
+        prev.map((s) => s.id === id ? { ...s, class_id: classId || null } : s)
+      )
+      toast.success(classId ? "Matière assignée à la classe" : "Matière rendue globale")
     })
   }
 
@@ -155,6 +173,25 @@ export function SubjectsAdminClient({ subjects: initial, questionCountMap }: Pro
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {classes.length > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor={`class-${subject.id}`} className="text-xs text-muted-foreground whitespace-nowrap">
+                        Classe
+                      </Label>
+                      <select
+                        id={`class-${subject.id}`}
+                        className="h-7 rounded-md border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+                        value={subject.class_id ?? ""}
+                        disabled={isPending}
+                        onChange={(e) => handleClassChange(subject.id, e.target.value)}
+                      >
+                        <option value="">— Global —</option>
+                        {classes.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1.5">
                     <Label htmlFor={`due-${subject.id}`} className="text-xs text-muted-foreground whitespace-nowrap">
                       Date limite

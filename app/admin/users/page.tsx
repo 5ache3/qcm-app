@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ApproveUserButton } from "@/components/ApproveUserButton"
+import { ChangeRoleSelect } from "@/components/ChangeRoleSelect"
 
 const PAGE_SIZE = 20
 
@@ -20,6 +21,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   const to = from + PAGE_SIZE - 1
 
   const [supabase, { t, lang }] = await Promise.all([createClient(), getServerT()])
+  const { data: { user: currentUser } } = await supabase.auth.getUser()
 
   const { data: profiles, count } = await supabase
     .from("profiles")
@@ -87,9 +89,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                   {practiceCountMap[profile.id] ?? 0} {t.admin_answers_label} ·{" "}
                   {testCountMap[profile.id] ?? 0} tests
                 </span>
-                <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
-                  {profile.role}
-                </Badge>
+                <ChangeRoleSelect userId={profile.id} currentRole={profile.role ?? "student"} isSelf={profile.id === currentUser?.id} />
               </div>
             </div>
           </Link>

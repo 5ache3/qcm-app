@@ -16,12 +16,28 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .single()
 
+  const role = profile?.role ?? "student"
+
+  let classMemberships: Array<{ className: string; status: string }> = []
+  if (role === "student") {
+    const { data: memberships } = await supabase
+      .from("class_memberships")
+      .select("status, classes(name)")
+      .eq("student_id", user.id)
+      .order("joined_at", { ascending: false })
+    classMemberships = (memberships ?? []).map((m) => ({
+      className: (m.classes as unknown as { name: string } | null)?.name ?? "—",
+      status: m.status,
+    }))
+  }
+
   return (
     <ProfileClient
       email={user.email ?? ""}
       fullName={profile?.full_name ?? ""}
-      role={profile?.role ?? "student"}
+      role={role}
       status={(profile?.status as string) ?? "pending"}
+      classMemberships={classMemberships}
     />
   )
 }

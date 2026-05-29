@@ -4,14 +4,15 @@ import { SubjectsAdminClient } from "./SubjectsAdminClient"
 export default async function AdminSubjectsPage() {
   const supabase = await createClient()
 
-  const { data: subjects } = await supabase
-    .from("subjects")
-    .select("id, name, description, icon, due_date, created_at")
-    .order("name")
-
-  const { data: counts } = await supabase
-    .from("questions")
-    .select("subject_id")
+  const [{ data: subjects }, { data: counts }, { data: classes }] = await Promise.all([
+    supabase
+      .from("subjects")
+      .select("id, name, description, icon, due_date, class_id, created_at")
+      .is("class_id", null)
+      .order("name"),
+    supabase.from("questions").select("subject_id"),
+    supabase.from("classes").select("id, name").order("name"),
+  ])
 
   const questionCountMap: Record<string, number> = {}
   for (const row of counts ?? []) {
@@ -22,6 +23,7 @@ export default async function AdminSubjectsPage() {
     <SubjectsAdminClient
       subjects={subjects ?? []}
       questionCountMap={questionCountMap}
+      classes={classes ?? []}
     />
   )
 }

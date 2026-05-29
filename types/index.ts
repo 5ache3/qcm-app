@@ -1,4 +1,4 @@
-export type UserRole = "student" | "admin"
+export type UserRole = "student" | "admin" | "tutor"
 
 export interface Lesson {
   id: string
@@ -23,7 +23,25 @@ export interface Subject {
   description: string | null
   icon: string | null
   due_date: string | null
+  class_id: string | null
   created_at: string
+}
+
+export interface Class {
+  id: string
+  name: string
+  description: string | null
+  tutor_id: string
+  invite_code: string
+  created_at: string
+}
+
+export interface ClassMembership {
+  id: string
+  class_id: string
+  student_id: string
+  status: "pending" | "approved"
+  joined_at: string
 }
 
 export interface Question {

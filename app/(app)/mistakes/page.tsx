@@ -1,13 +1,13 @@
 import { createClient } from "@/lib/supabase/server"
 import { getServerT } from "@/lib/i18n"
 import Link from "next/link"
-import { AlertCircle, Calendar } from "lucide-react"
+import { AlertCircle, Calendar, GraduationCap } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 type SubjectEntry = {
-  subject: { id: string; name: string; icon: string | null; due_date: string | null }
+  subject: { id: string; name: string; icon: string | null; due_date: string | null; class_id: string | null; class_name: string | null }
   wrong: number
   partial: number
 }
@@ -37,7 +37,7 @@ export default async function MistakesPage() {
 
   const { data: answers } = await supabase
     .from("practice_answers")
-    .select("subject_id, status, subjects(id, name, icon, due_date)")
+    .select("subject_id, status, subjects(id, name, icon, due_date, class_id, classes(name))")
     .eq("user_id", user!.id)
     .in("status", ["wrong", "partial"])
 
@@ -58,7 +58,9 @@ export default async function MistakesPage() {
 
   const bySubject = new Map<string, SubjectEntry>()
   for (const a of answers) {
-    const sub = a.subjects as unknown as { id: string; name: string; icon: string | null; due_date: string | null }
+    const raw = a.subjects as unknown as { id: string; name: string; icon: string | null; due_date: string | null; class_id: string | null; classes: { name: string } | null } | null
+    if (!raw) continue
+    const sub = { ...raw, class_name: raw.classes?.name ?? null }
     if (!bySubject.has(sub.id)) {
       bySubject.set(sub.id, { subject: sub, wrong: 0, partial: 0 })
     }
@@ -68,57 +70,84 @@ export default async function MistakesPage() {
   }
 
   const today = new Date()
-  const subjects = sortByDueDate(Array.from(bySubject.values()))
+  const allEntries = sortByDueDate(Array.from(bySubject.values()))
+
+  // Group by class
+  const groupMap = new Map<string | null, { className: string | null; entries: SubjectEntry[] }>()
+  for (const entry of allEntries) {
+    const key = entry.subject.class_id ?? null
+    if (!groupMap.has(key)) {
+      groupMap.set(key, { className: entry.subject.class_name, entries: [] })
+    }
+    groupMap.get(key)!.entries.push(entry)
+  }
+
+  const groups = [...groupMap.entries()]
+    .map(([classId, group]) => ({ classId, className: group.className, entries: group.entries }))
+    .sort((a, b) => {
+      if (a.classId === null) return 1
+      if (b.classId === null) return -1
+      return (a.className ?? "").localeCompare(b.className ?? "")
+    })
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold">{t.mistakes_title}</h1>
         <p className="text-muted-foreground mt-1">
-          {answers.length} {t.to_review_count} ({subjects.length} {t.nav_subjects.toLowerCase()})
+          {answers.length} {t.to_review_count} ({allEntries.length} {t.nav_subjects.toLowerCase()})
         </p>
       </div>
 
-      <div className="flex flex-col space-y-1">
-        {subjects.map(({ subject, wrong, partial }) => {
-          const dueDate = subject.due_date ? new Date(subject.due_date + "T12:00:00") : null
-          const isPastDue = dueDate ? dueDate < today : false
-          const daysUntilDue = dueDate ? Math.round((dueDate.getTime() - today.getTime()) / 86400000) : null
+      {groups.map((group) => (
+        <section key={group.classId ?? "__global__"} className="space-y-1">
+          <div className="flex items-center gap-2 mb-2">
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              {group.className ?? "Général"}
+            </h2>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+          {group.entries.map(({ subject, wrong, partial }) => {
+            const dueDate = subject.due_date ? new Date(subject.due_date + "T12:00:00") : null
+            const isPastDue = dueDate ? dueDate < today : false
+            const daysUntilDue = dueDate ? Math.round((dueDate.getTime() - today.getTime()) / 86400000) : null
 
-          return (
-            <Link key={subject.id} href={`/mistakes/${subject.id}`}>
-              <Card className={`hover:bg-muted/40 transition-colors cursor-pointer ${isPastDue ? "opacity-60" : ""}`}>
-                <CardContent className="py-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-2xl">{subject.icon ?? "📚"}</span>
-                    <div className="min-w-0">
-                      <span className="font-medium">{subject.name}</span>
-                      {dueDate && (
-                        <div className={`flex items-center gap-1 text-xs mt-0.5 ${isPastDue ? "text-destructive" : "text-muted-foreground"}`}>
-                          <Calendar className="h-3 w-3 shrink-0" />
-                          {isPastDue
-                            ? `Expiré le ${dueDate.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`
-                            : daysUntilDue === 0
-                              ? "Aujourd'hui"
-                              : `Dans ${daysUntilDue} j — ${dueDate.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`}
-                        </div>
+            return (
+              <Link key={subject.id} href={`/mistakes/${subject.id}`}>
+                <Card className={`hover:bg-muted/40 transition-colors cursor-pointer ${isPastDue ? "opacity-60" : ""}`}>
+                  <CardContent className="py-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-2xl">{subject.icon ?? "📚"}</span>
+                      <div className="min-w-0">
+                        <span className="font-medium">{subject.name}</span>
+                        {dueDate && (
+                          <div className={`flex items-center gap-1 text-xs mt-0.5 ${isPastDue ? "text-destructive" : "text-muted-foreground"}`}>
+                            <Calendar className="h-3 w-3 shrink-0" />
+                            {isPastDue
+                              ? `Expiré le ${dueDate.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`
+                              : daysUntilDue === 0
+                                ? "Aujourd'hui"
+                                : `Dans ${daysUntilDue} j — ${dueDate.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {wrong > 0 && (
+                        <Badge variant="error">{wrong} {t.stat_incorrect.toLowerCase()}</Badge>
+                      )}
+                      {partial > 0 && (
+                        <Badge variant="warning">{partial} {t.stat_partial.toLowerCase()}</Badge>
                       )}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {wrong > 0 && (
-                      <Badge variant="error">{wrong} {t.stat_incorrect.toLowerCase()}</Badge>
-                    )}
-                    {partial > 0 && (
-                      <Badge variant="warning">{partial} {t.stat_partial.toLowerCase()}</Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          )
-        })}
-      </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            )
+          })}
+        </section>
+      ))}
     </div>
   )
 }

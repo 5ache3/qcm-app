@@ -23,7 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="flex min-h-screen">
       <AppSidebar user={user} profile={profile} />
       <main className="flex-1 overflow-auto pb-16 md:pb-0">{children}</main>
-      <MobileNav isAdmin={true} />
+      <MobileNav role="admin" />
     </div>
   )
 }

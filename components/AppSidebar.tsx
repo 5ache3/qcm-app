@@ -12,6 +12,7 @@ import {
   BarChart2,
   LogOut,
   UserCircle,
+  GraduationCap,
 } from "lucide-react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
@@ -37,11 +38,17 @@ export function AppSidebar({ user, profile }: AppSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const isAdmin = profile?.role === "admin"
+  const isTutor = profile?.role === "tutor"
 
   const studentNav = [
     { href: "/dashboard", label: t.nav_dashboard, icon: LayoutDashboard },
     { href: "/subjects", label: t.nav_subjects, icon: BookMarked },
     { href: "/mistakes", label: t.nav_mistakes, icon: AlertCircle },
+    { href: "/profile", label: t.nav_profile, icon: UserCircle },
+  ]
+
+  const tutorNav = [
+    { href: "/tutor", label: "Mes classes", icon: GraduationCap },
     { href: "/profile", label: t.nav_profile, icon: UserCircle },
   ]
 
@@ -53,7 +60,7 @@ export function AppSidebar({ user, profile }: AppSidebarProps) {
     { href: "/admin/analytics", label: t.nav_analytics, icon: BarChart2 },
   ]
 
-  const navItems = isAdmin ? adminNav : studentNav
+  const navItems = isAdmin ? adminNav : isTutor ? tutorNav : studentNav
   const initials = profile?.full_name
     ?.split(" ")
     .map((n) => n[0])

@@ -17,13 +17,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .eq("id", user.id)
     .single()
 
-  const isAdmin = profile?.role === "admin"
-
   return (
     <div className="flex min-h-screen">
       <AppSidebar user={user} profile={profile} />
       <main className="flex-1 overflow-auto pb-16 md:pb-0">{children}</main>
-      <MobileNav isAdmin={isAdmin} />
+      <MobileNav role={profile?.role ?? "student"} />
     </div>
   )
 }

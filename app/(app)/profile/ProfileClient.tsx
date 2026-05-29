@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { User, KeyRound, LogOut, Languages, Clock } from "lucide-react"
+import { User, KeyRound, LogOut, Languages, Clock, GraduationCap, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,21 +13,40 @@ import { Separator } from "@/components/ui/separator"
 import { createClient } from "@/lib/supabase/client"
 import { useT } from "@/lib/i18n-client"
 import { LanguageSwitcher } from "@/components/LanguageSwitcher"
-import { updateProfile, sendPasswordReset } from "./actions"
+import { updateProfile, sendPasswordReset, joinClass } from "./actions"
+
+interface ClassMembership {
+  className: string
+  status: string
+}
 
 interface Props {
   email: string
   fullName: string
   role: string
   status: string
+  classMemberships?: ClassMembership[]
 }
 
-export function ProfileClient({ email, fullName, role, status }: Props) {
+export function ProfileClient({ email, fullName, role, status, classMemberships = [] }: Props) {
   const t = useT()
   const router = useRouter()
   const [name, setName] = useState(fullName)
   const [isSaving, startTransition] = useTransition()
   const [resetSent, setResetSent] = useState(false)
+  const [inviteCode, setInviteCode] = useState("")
+  const [memberships, setMemberships] = useState(classMemberships)
+
+  function handleJoinClass() {
+    if (!inviteCode.trim()) return
+    startTransition(async () => {
+      const res = await joinClass(inviteCode.trim())
+      if (res?.error) { toast.error(res.error); return }
+      toast.success(`Demande envoyée pour rejoindre "${res.className}". En attente d'approbation.`)
+      setInviteCode("")
+      setMemberships((prev) => [...prev, { className: res.className!, status: "pending" }])
+    })
+  }
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -130,6 +149,55 @@ export function ProfileClient({ email, fullName, role, status }: Props) {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Join class — students only */}
+      {role === "student" && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Mes classes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {memberships.length > 0 && (
+              <div className="space-y-1.5">
+                {memberships.map((m, i) => (
+                  <div key={i} className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm">
+                    <span className="font-medium">{m.className}</span>
+                    {m.status === "approved" ? (
+                      <Badge variant="success" className="text-xs flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" />Approuvé
+                      </Badge>
+                    ) : (
+                      <Badge variant="warning" className="text-xs flex items-center gap-1">
+                        <Clock className="h-3 w-3" />En attente
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="invite_code">Rejoindre une classe</Label>
+              <p className="text-xs text-muted-foreground">Entrez le code fourni par votre enseignant.</p>
+              <div className="flex gap-2">
+                <Input
+                  id="invite_code"
+                  placeholder="ex. abc12345"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleJoinClass()}
+                  className="font-mono"
+                />
+                <Button disabled={isSaving || !inviteCode.trim()} onClick={handleJoinClass}>
+                  Rejoindre
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Language switcher — visible on mobile where sidebar is hidden */}
       <Card className="md:hidden">
