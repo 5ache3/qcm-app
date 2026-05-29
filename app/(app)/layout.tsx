@@ -11,17 +11,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   if (!user) redirect("/login")
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role")
-    .eq("id", user.id)
-    .single()
+  const [{ data: profile }, { count: unreadCount }] = await Promise.all([
+    supabase.from("profiles").select("full_name, role").eq("id", user.id).single(),
+    supabase.from("notifications").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("read", false),
+  ])
 
   return (
     <div className="flex min-h-screen">
-      <AppSidebar user={user} profile={profile} />
+      <AppSidebar user={user} profile={profile} unreadCount={unreadCount ?? 0} />
       <main className="flex-1 overflow-auto pb-16 md:pb-0">{children}</main>
-      <MobileNav role={profile?.role ?? "student"} />
+      <MobileNav role={profile?.role ?? "student"} unreadCount={unreadCount ?? 0} />
     </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { createNotification } from "@/lib/notifications"
 
 async function assertAdmin() {
   const supabase = await createClient()
@@ -25,6 +26,14 @@ export async function approveUser(userId: string) {
     .eq("id", userId)
 
   if (error) return { success: false }
+
+  await createNotification({
+    userId,
+    type: "user_approved",
+    title: "Compte approuvé",
+    body: "Votre compte a été approuvé. Vous pouvez maintenant accéder à toutes les fonctionnalités.",
+    link: "/dashboard",
+  })
 
   revalidatePath("/admin/users")
   revalidatePath(`/admin/users/${userId}`)

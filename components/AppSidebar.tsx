@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useT } from "@/lib/i18n-client"
 import { LanguageSwitcher } from "@/components/LanguageSwitcher"
+import { NotificationBell } from "@/components/NotificationBell"
 import type { User } from "@supabase/supabase-js"
 
 interface Profile {
@@ -31,9 +32,10 @@ interface Profile {
 interface AppSidebarProps {
   user: User
   profile: Profile | null
+  unreadCount: number
 }
 
-export function AppSidebar({ user, profile }: AppSidebarProps) {
+export function AppSidebar({ user, profile, unreadCount }: AppSidebarProps) {
   const t = useT()
   const pathname = usePathname()
   const router = useRouter()
@@ -79,10 +81,11 @@ export function AppSidebar({ user, profile }: AppSidebarProps) {
   return (
     <aside className="hidden md:flex w-60 flex-col border-r bg-card">
       <div className="flex h-16 items-center gap-3 border-b px-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
           <BookOpen className="h-4 w-4" />
         </div>
-        <span className="font-semibold text-sm">QCM Revision</span>
+        <span className="font-semibold text-sm flex-1">QCM Revision</span>
+        <NotificationBell unreadCount={unreadCount} />
       </div>
 
       <nav className="flex-1 space-y-1 p-3">

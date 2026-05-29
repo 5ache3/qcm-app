@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
+import { createNotification } from "@/lib/notifications"
 
 export async function joinClass(inviteCode: string) {
   const supabase = await createClient()
@@ -16,7 +17,7 @@ export async function joinClass(inviteCode: string) {
   const admin = createAdminClient()
   const { data: cls } = await admin
     .from("classes")
-    .select("id, name")
+    .select("id, name, tutor_id")
     .eq("invite_code", code)
     .single()
 
@@ -40,6 +41,16 @@ export async function joinClass(inviteCode: string) {
     .insert({ class_id: cls.id, student_id: user.id, status: "pending" })
 
   if (error) return { error: error.message }
+
+  await createNotification({
+    userId: cls.tutor_id,
+    type: "class_join_request",
+    title: "Nouvelle demande d'adhésion",
+    body: `Un étudiant souhaite rejoindre votre classe "${cls.name}".`,
+    link: `/tutor/classes/${cls.id}/students`,
+    data: { student_id: user.id, class_id: cls.id },
+  })
+
   revalidatePath("/profile")
   return { success: true, className: cls.name }
 }

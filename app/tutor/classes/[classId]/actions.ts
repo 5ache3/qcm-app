@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { createNotification } from "@/lib/notifications"
 
 export async function updateClassDetails(classId: string, name: string, description: string) {
   const supabase = await createClient()
@@ -48,6 +49,16 @@ export async function approveStudent(classId: string, studentId: string) {
     .eq("class_id", classId)
     .eq("student_id", studentId)
   if (error) return { error: error.message }
+
+  const { data: cls } = await supabase.from("classes").select("name").eq("id", classId).single()
+  await createNotification({
+    userId: studentId,
+    type: "class_join_approved",
+    title: "Demande acceptée",
+    body: `Vous avez été accepté dans la classe "${cls?.name ?? ""}".`,
+    link: "/dashboard",
+  })
+
   revalidatePath(`/tutor/classes/${classId}/students`)
   return { success: true }
 }

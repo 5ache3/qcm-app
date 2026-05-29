@@ -466,3 +466,78 @@ create policy "tests_select_tutor"
       where cm.student_id = tests.user_id and c.tutor_id = auth.uid()
     )
   );
+
+-- ─── Notifications ─────────────────────────────────────────────
+
+create table if not exists notifications (
+  id         uuid        primary key default gen_random_uuid(),
+  user_id    uuid        not null references profiles(id) on delete cascade,
+  type       text        not null,
+  title      text        not null,
+  body       text,
+  link       text,
+  read       boolean     not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists notifications_user_id_idx on notifications(user_id);
+create index if not exists notifications_unread_idx  on notifications(user_id, read) where (not read);
+
+alter table notifications enable row level security;
+
+drop policy if exists "notifications_own" on notifications;
+create policy "notifications_own" on notifications
+  for all using (user_id = auth.uid());
+
+-- Trigger: notify all admins when a new profile is created with status = 'pending'
+create or replace function public.notify_admins_on_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into notifications (user_id, type, title, body, link)
+  select
+    p.id,
+    'user_pending_approval',
+    'Nouvel utilisateur en attente',
+    coalesce(new.full_name, 'Un utilisateur') || ' attend votre approbation.',
+    '/admin/users'
+  from profiles p
+  where p.role = 'admin';
+  return new;
+end;
+$$;
+
+drop trigger if exists on_new_pending_user on profiles;
+create trigger on_new_pending_user
+  after insert on profiles
+  for each row
+  when (new.status = 'pending')
+  execute function public.notify_admins_on_new_user();
+
+-- ─── Notifications: add data column for action context ─────────
+alter table notifications add column if not exists data jsonb;
+
+-- Re-create trigger function with data field (user_id of the pending user)
+create or replace function public.notify_admins_on_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into notifications (user_id, type, title, body, link, data)
+  select
+    p.id,
+    'user_pending_approval',
+    'Nouvel utilisateur en attente',
+    coalesce(new.full_name, 'Un utilisateur') || ' attend votre approbation.',
+    '/admin/users',
+    jsonb_build_object('user_id', new.id)
+  from profiles p
+  where p.role = 'admin';
+  return new;
+end;
+$$;

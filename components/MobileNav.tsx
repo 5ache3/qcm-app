@@ -11,35 +11,41 @@ import {
   ClipboardList,
   BarChart2,
   GraduationCap,
+  Bell,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useT } from "@/lib/i18n-client"
 
 interface Props {
   role: string
+  unreadCount: number
 }
 
-export function MobileNav({ role }: Props) {
+export function MobileNav({ role, unreadCount }: Props) {
   const t = useT()
   const pathname = usePathname()
+
+  const bellItem = { href: "/notifications", label: "Alertes", icon: Bell }
 
   const studentNav = [
     { href: "/dashboard", label: t.nav_home, icon: LayoutDashboard },
     { href: "/subjects", label: t.nav_subjects, icon: BookMarked },
     { href: "/mistakes", label: t.nav_mistakes, icon: AlertCircle },
+    bellItem,
     { href: "/profile", label: t.nav_profile, icon: UserCircle },
   ]
 
   const tutorNav = [
     { href: "/tutor", label: "Classes", icon: GraduationCap },
+    bellItem,
     { href: "/profile", label: t.nav_profile, icon: UserCircle },
   ]
 
   const adminNav = [
     { href: "/admin", label: t.nav_overview, icon: LayoutDashboard },
     { href: "/admin/users", label: t.nav_users, icon: Users },
+    bellItem,
     { href: "/admin/subjects", label: t.nav_subjects, icon: BookMarked },
-    { href: "/admin/questions", label: t.nav_questions, icon: ClipboardList },
     { href: "/admin/analytics", label: t.nav_analytics, icon: BarChart2 },
   ]
 
@@ -50,7 +56,8 @@ export function MobileNav({ role }: Props) {
       {navItems.map(({ href, label, icon: Icon }) => {
         const active =
           pathname === href ||
-          (href !== "/dashboard" && href !== "/admin" && pathname.startsWith(href))
+          (href !== "/dashboard" && href !== "/admin" && href !== "/notifications" && pathname.startsWith(href))
+        const isBell = href === "/notifications"
         return (
           <Link
             key={href}
@@ -60,7 +67,14 @@ export function MobileNav({ role }: Props) {
               active ? "text-primary" : "text-muted-foreground"
             )}
           >
-            <Icon className={cn("h-5 w-5", active ? "text-primary" : "text-muted-foreground")} />
+            <span className="relative">
+              <Icon className={cn("h-5 w-5", active ? "text-primary" : "text-muted-foreground")} />
+              {isBell && unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground leading-none">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </span>
             {label}
           </Link>
         )
