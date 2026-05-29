@@ -50,6 +50,33 @@ export async function updateClassSubjectDueDate(classId: string, subjectId: stri
   return { success: true }
 }
 
+export async function updateClassSubject(
+  classId: string,
+  subjectId: string,
+  fields: { name: string; description: string; icon: string; due_date: string | null }
+) {
+  const supabase = await verifyTutorOwnsClass(classId)
+  if (!supabase) return { error: "Non autorisé" }
+
+  const name = fields.name.trim()
+  if (!name) return { error: "Le nom est requis" }
+
+  const { error } = await supabase
+    .from("subjects")
+    .update({
+      name,
+      description: fields.description.trim() || null,
+      icon: fields.icon.trim() || null,
+      due_date: fields.due_date || null,
+    })
+    .eq("id", subjectId)
+    .eq("class_id", classId)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/tutor/classes/${classId}/subjects`)
+  return { success: true }
+}
+
 export async function deleteClassSubject(classId: string, subjectId: string) {
   const supabase = await verifyTutorOwnsClass(classId)
   if (!supabase) return { error: "Non autorisé" }

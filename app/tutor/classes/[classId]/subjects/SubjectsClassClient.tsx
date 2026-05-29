@@ -2,13 +2,12 @@
 
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
-import { Plus, Trash2, BookMarked } from "lucide-react"
+import { Plus, Trash2, BookMarked, Pencil, Check, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { createClassSubject, deleteClassSubject, updateClassSubjectDueDate } from "./actions"
+import { createClassSubject, deleteClassSubject, updateClassSubject } from "./actions"
 import { TutorLessonsManager } from "./TutorLessonsManager"
 
 interface Subject {
@@ -26,10 +25,39 @@ interface Props {
   questionCountMap: Record<string, number>
 }
 
+type EditingState = { name: string; description: string; icon: string; due_date: string }
+
 export function SubjectsClassClient({ classId, subjects: initial, questionCountMap }: Props) {
   const [subjects, setSubjects] = useState(initial)
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editFields, setEditFields] = useState<EditingState>({ name: "", description: "", icon: "", due_date: "" })
   const [isPending, startTransition] = useTransition()
+
+  function startEdit(s: Subject) {
+    setEditingId(s.id)
+    setEditFields({ name: s.name, description: s.description ?? "", icon: s.icon ?? "", due_date: s.due_date ?? "" })
+  }
+
+  function cancelEdit() { setEditingId(null) }
+
+  function handleSave(id: string) {
+    startTransition(async () => {
+      const res = await updateClassSubject(classId, id, {
+        name: editFields.name,
+        description: editFields.description,
+        icon: editFields.icon,
+        due_date: editFields.due_date || null,
+      })
+      if (res.error) { toast.error(res.error); return }
+      toast.success("Matière mise à jour")
+      setSubjects((prev) => prev.map((s) => s.id === id
+        ? { ...s, name: editFields.name.trim(), description: editFields.description.trim() || null, icon: editFields.icon.trim() || null, due_date: editFields.due_date || null }
+        : s
+      ))
+      setEditingId(null)
+    })
+  }
 
   function handleCreate(formData: FormData) {
     startTransition(async () => {
@@ -38,15 +66,6 @@ export function SubjectsClassClient({ classId, subjects: initial, questionCountM
       toast.success("Matière créée")
       setShowForm(false)
       window.location.reload()
-    })
-  }
-
-  function handleDueDateChange(id: string, value: string) {
-    startTransition(async () => {
-      const res = await updateClassSubjectDueDate(classId, id, value || null)
-      if (res.error) { toast.error(res.error); return }
-      setSubjects((prev) => prev.map((s) => s.id === id ? { ...s, due_date: value || null } : s))
-      toast.success("Date limite mise à jour")
     })
   }
 
@@ -110,50 +129,99 @@ export function SubjectsClassClient({ classId, subjects: initial, questionCountM
         </div>
       ) : (
         <div className="space-y-2">
-          {subjects.map((subject) => (
-            <div key={subject.id} className="rounded-lg border bg-card p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{subject.icon ?? "📚"}</span>
-                  <div>
-                    <p className="font-medium">{subject.name}</p>
-                    {subject.description && (
-                      <p className="text-sm text-muted-foreground">{subject.description}</p>
-                    )}
+          {subjects.map((subject) => {
+            const isEditing = editingId === subject.id
+            return (
+              <div key={subject.id} className="rounded-lg border bg-card p-4 space-y-3">
+                {isEditing ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-[auto_1fr] gap-3 items-start">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Emoji</Label>
+                        <Input
+                          value={editFields.icon}
+                          onChange={(e) => setEditFields((f) => ({ ...f, icon: e.target.value }))}
+                          placeholder="📚"
+                          maxLength={4}
+                          className="w-16 text-center text-lg"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Nom *</Label>
+                        <Input
+                          value={editFields.name}
+                          onChange={(e) => setEditFields((f) => ({ ...f, name: e.target.value }))}
+                          placeholder="Nom de la matière"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Description</Label>
+                      <Input
+                        value={editFields.description}
+                        onChange={(e) => setEditFields((f) => ({ ...f, description: e.target.value }))}
+                        placeholder="Description (optionnelle)"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Date limite</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="date"
+                          value={editFields.due_date}
+                          onChange={(e) => setEditFields((f) => ({ ...f, due_date: e.target.value }))}
+                          className="w-44"
+                        />
+                        {editFields.due_date && (
+                          <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setEditFields((f) => ({ ...f, due_date: "" }))}>
+                            <X className="h-4 w-4 me-1" />Effacer
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" disabled={isPending || !editFields.name.trim()} onClick={() => handleSave(subject.id)} className="gap-1">
+                        <Check className="h-3.5 w-3.5" />Enregistrer
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={cancelEdit} className="gap-1">
+                        <X className="h-3.5 w-3.5" />Annuler
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5">
-                    <Label htmlFor={`due-${subject.id}`} className="text-xs text-muted-foreground whitespace-nowrap">
-                      Date limite
-                    </Label>
-                    <Input
-                      id={`due-${subject.id}`}
-                      type="date"
-                      className="h-7 w-36 text-xs cursor-pointer"
-                      defaultValue={subject.due_date ?? ""}
-                      disabled={isPending}
-                      onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
-                      onChange={(e) => handleDueDateChange(subject.id, e.target.value)}
-                    />
+                ) : (
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-2xl shrink-0">{subject.icon ?? "📚"}</span>
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{subject.name}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {subject.description && (
+                            <p className="text-sm text-muted-foreground truncate">{subject.description}</p>
+                          )}
+                          {subject.due_date && (
+                            <p className="text-xs text-muted-foreground">
+                              📅 {new Date(subject.due_date + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground">{questionCountMap[subject.id] ?? 0} question{(questionCountMap[subject.id] ?? 0) !== 1 ? "s" : ""}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => startEdit(subject)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(subject.id, subject.name)} disabled={isPending}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <Badge variant="outline">
-                    {questionCountMap[subject.id] ?? 0} questions
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-destructive"
-                    onClick={() => handleDelete(subject.id, subject.name)}
-                    disabled={isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                )}
+                <TutorLessonsManager classId={classId} subjectId={subject.id} />
               </div>
-              <TutorLessonsManager classId={classId} subjectId={subject.id} />
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
