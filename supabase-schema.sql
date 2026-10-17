@@ -659,3 +659,17 @@ create policy "qcm_images_delete"
   );
 
 notify pgrst, 'reload schema';
+
+-- ─── SVG images ──────────────────────────────────────────────
+-- Separate bucket for sanitized SVGs. No insert/update policy on purpose:
+-- only the server (service role, after sanitizing) can write here. Users
+-- may delete their own old files when replacing an image.
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('qcm-svg', 'qcm-svg', true, 524288, array['image/svg+xml'])
+on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "qcm_svg_delete" on storage.objects;
+
+create policy "qcm_svg_delete" on storage.objects for delete to authenticated
+  using (bucket_id = 'qcm-svg' and public.can_manage_image(name));

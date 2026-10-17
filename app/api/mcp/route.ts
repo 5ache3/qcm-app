@@ -3,6 +3,7 @@ import type { AuthInfo } from "@modelcontextprotocol/server"
 import { z } from "zod"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hashMcpToken } from "@/lib/mcp-tokens"
+import { fetchPublicImage, setStoredImage, type ImageInput, type ImageTarget } from "@/lib/stored-images"
 
 // The admin client bypasses RLS, so every tool must scope its queries to the
 // authenticated tutor's own classes.
@@ -53,94 +54,29 @@ async function lessonInSubject(lessonId: string, subjectId: string) {
   return !!data
 }
 
-const IMAGE_BUCKET = "qcm-images"
-const IMAGE_TYPES: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/webp": "webp",
-  "image/gif": "gif",
-}
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024
-
-// Refuse loopback, link-local and private-range hosts so the server can't be
-// pointed at internal addresses
-function isPublicHttpsUrl(raw: string) {
-  let url: URL
-  try {
-    url = new URL(raw)
-  } catch {
-    return false
-  }
-  if (url.protocol !== "https:") return false
-  const host = url.hostname.replace(/^\[|\]$/g, "").toLowerCase()
-  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".internal") || host.endsWith(".local")) return false
-  if (/^(127\.|10\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) return false
-  if (host.includes(":")) return false // IPv6 literals
-  return true
-}
-
-// Downloads an image, stores it under <folder>/<ownerId>/ and saves its public
-// URL in <table>.<column>; a null imageUrl clears the image. The previous file
-// is removed from storage either way.
-async function setStoredImage(
-  target: { table: "classes" | "subjects"; column: "cover_url" | "logo_url"; folder: "classes" | "subjects" },
+// Applies an image to a class cover or subject logo from either a URL or raw
+// SVG markup; image_url null removes it
+async function applyImage(
+  target: ImageTarget,
   ownerId: string,
-  imageUrl: string | null
+  imageUrl: string | null | undefined,
+  svg: string | undefined
 ): Promise<ToolResult> {
-  const supabase = createAdminClient()
-  const { data: row } = await supabase.from(target.table).select(target.column).eq("id", ownerId).single()
-  const previousUrl = (row as Record<string, string | null> | null)?.[target.column] ?? null
+  if (svg && imageUrl) return fail("Pass either image_url or svg, not both")
 
-  let newUrl: string | null = null
-  if (imageUrl) {
-    if (!isPublicHttpsUrl(imageUrl)) return fail("image_url must be a public https URL")
-
-    // Follow redirects by hand so every hop gets the same public-URL check
-    let res: Response | null = null
-    let nextUrl = imageUrl
-    try {
-      for (let hop = 0; hop < 4; hop++) {
-        if (!isPublicHttpsUrl(nextUrl)) return fail("image_url must be a public https URL")
-        const r = await fetch(nextUrl, { redirect: "manual", signal: AbortSignal.timeout(10_000) })
-        const location = r.headers.get("location")
-        if (r.status >= 300 && r.status < 400 && location) {
-          nextUrl = new URL(location, nextUrl).toString()
-          continue
-        }
-        res = r
-        break
-      }
-    } catch {
-      return fail("Could not download the image")
-    }
-    if (!res) return fail("Too many redirects")
-    if (!res.ok) return fail(`Could not download the image (HTTP ${res.status})`)
-
-    const contentType = (res.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase()
-    const ext = IMAGE_TYPES[contentType]
-    if (!ext) return fail("Unsupported image type; use PNG, JPEG, WebP or GIF")
-
-    const bytes = await res.arrayBuffer()
-    if (bytes.byteLength > MAX_IMAGE_BYTES) return fail("Image is larger than 5 MB")
-
-    const path = `${target.folder}/${ownerId}/${Date.now()}.${ext}`
-    const { error: uploadError } = await supabase.storage
-      .from(IMAGE_BUCKET)
-      .upload(path, bytes, { contentType })
-    if (uploadError) return fail(uploadError.message)
-    newUrl = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path).data.publicUrl
+  let input: ImageInput | null = null
+  if (svg) {
+    input = { contentType: "image/svg+xml", bytes: new TextEncoder().encode(svg).buffer as ArrayBuffer }
+  } else if (imageUrl) {
+    const downloaded = await fetchPublicImage(imageUrl)
+    if ("error" in downloaded) return fail(downloaded.error)
+    input = downloaded
+  } else if (imageUrl === undefined) {
+    return fail("Pass image_url, svg, or image_url: null to remove the image")
   }
 
-  const { error } = await supabase.from(target.table).update({ [target.column]: newUrl }).eq("id", ownerId)
-  if (error) return fail(error.message)
-
-  const marker = `/object/public/${IMAGE_BUCKET}/`
-  const i = previousUrl?.indexOf(marker) ?? -1
-  if (previousUrl && i !== -1) {
-    await supabase.storage.from(IMAGE_BUCKET).remove([decodeURIComponent(previousUrl.slice(i + marker.length))])
-  }
-
-  return ok({ id: ownerId, [target.column]: newUrl })
+  const result = await setStoredImage(target, ownerId, input)
+  return "error" in result ? fail(result.error) : ok({ id: ownerId, url: result.url })
 }
 
 const questionSchema = z.object({
@@ -342,16 +278,17 @@ const handler = createMcpHandler(
       {
         title: "Set a class cover image",
         description:
-          "Set the cover picture of one of the tutor's classes from a public https image URL (PNG, JPEG, WebP or GIF, max 5 MB). The image is copied into the app's storage. Pass image_url null to remove the cover.",
+          "Set the cover picture of one of the tutor's classes, either from a public https image URL (PNG, JPEG, WebP, GIF max 5 MB, or SVG) or from SVG markup you write yourself (svg, max 512 KB, wide aspect e.g. viewBox 0 0 1200 400). SVGs are sanitized: scripts, event handlers, foreignObject and external links are removed, so use only inline shapes, gradients and text. Pass image_url null to remove the cover.",
         inputSchema: z.object({
           class_id: z.string().uuid(),
-          image_url: z.string().url().nullable(),
+          image_url: z.string().url().nullable().optional(),
+          svg: z.string().optional().describe("Raw SVG markup starting with <svg"),
         }),
       },
-      async ({ class_id, image_url }, ctx) => {
+      async ({ class_id, image_url, svg }, ctx) => {
         const tutorId = getTutorId(ctx.http?.authInfo)
         if (!(await tutorOwnsClass(tutorId, class_id))) return fail("Class not found or not yours")
-        return setStoredImage({ table: "classes", column: "cover_url", folder: "classes" }, class_id, image_url)
+        return applyImage("class-cover", class_id, image_url, svg)
       }
     )
 
@@ -360,18 +297,19 @@ const handler = createMcpHandler(
       {
         title: "Set a subject logo",
         description:
-          "Set the logo of a subject (matière) in one of the tutor's classes from a public https image URL (PNG, JPEG, WebP or GIF, max 5 MB). The image is copied into the app's storage. Pass image_url null to remove the logo.",
+          "Set the logo of a subject (matière) in one of the tutor's classes, either from a public https image URL (PNG, JPEG, WebP, GIF max 5 MB, or SVG) or from SVG markup you write yourself (svg, max 512 KB, square e.g. viewBox 0 0 256 256). SVGs are sanitized: scripts, event handlers, foreignObject and external links are removed, so use only inline shapes, gradients and text. Pass image_url null to remove the logo.",
         inputSchema: z.object({
           subject_id: z.string().uuid(),
-          image_url: z.string().url().nullable(),
+          image_url: z.string().url().nullable().optional(),
+          svg: z.string().optional().describe("Raw SVG markup starting with <svg"),
         }),
       },
-      async ({ subject_id, image_url }, ctx) => {
+      async ({ subject_id, image_url, svg }, ctx) => {
         const tutorId = getTutorId(ctx.http?.authInfo)
         if (!(await getOwnedSubject(tutorId, subject_id))) {
           return fail("Subject not found or not in one of your classes")
         }
-        return setStoredImage({ table: "subjects", column: "logo_url", folder: "subjects" }, subject_id, image_url)
+        return applyImage("subject-logo", subject_id, image_url, svg)
       }
     )
 

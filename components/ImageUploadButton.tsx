@@ -6,9 +6,12 @@ import { toast } from "sonner"
 import { ImagePlus, Loader2, Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
+import { uploadSvgImage } from "@/app/actions/images"
 
 const BUCKET = "qcm-images"
+const BUCKETS = [BUCKET, "qcm-svg"]
 const MAX_BYTES = 5 * 1024 * 1024
+const MAX_SVG_BYTES = 512 * 1024
 
 interface Props {
   target: "class-cover" | "subject-logo"
@@ -24,11 +27,14 @@ const TARGETS = {
   "subject-logo": { table: "subjects", column: "logo_url", folder: "subjects", label: "Logo" },
 } as const
 
-// Storage path of a public URL from our bucket, so the old file can be removed
-function storagePath(url: string | null) {
-  const marker = `/object/public/${BUCKET}/`
-  const i = url?.indexOf(marker) ?? -1
-  return url && i !== -1 ? decodeURIComponent(url.slice(i + marker.length)) : null
+// Bucket and path of a public URL from our buckets, so the old file can be removed
+function storedObject(url: string | null) {
+  for (const bucket of BUCKETS) {
+    const marker = `/object/public/${bucket}/`
+    const i = url?.indexOf(marker) ?? -1
+    if (url && i !== -1) return { bucket, path: decodeURIComponent(url.slice(i + marker.length)) }
+  }
+  return null
 }
 
 // Uploads go straight from the browser to Supabase Storage; the qcm-images
@@ -47,21 +53,32 @@ export function ImageUploadButton({ target, ownerId, currentUrl, variant = "over
     const supabase = createClient()
     const { error } = await supabase.from(table).update({ [column]: url }).eq("id", ownerId)
     if (error) throw error
-    const oldPath = storagePath(currentUrl)
-    if (oldPath) await supabase.storage.from(BUCKET).remove([oldPath])
+    const old = storedObject(currentUrl)
+    if (old) await supabase.storage.from(old.bucket).remove([old.path])
   }
 
   async function handleFile(file: File) {
-    if (!file.type.startsWith("image/") || file.type === "image/svg+xml") {
-      toast.error("Choisissez une image PNG, JPEG, WebP ou GIF")
+    const isSvg = file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg")
+    if (!isSvg && !file.type.startsWith("image/")) {
+      toast.error("Choisissez une image PNG, JPEG, WebP, GIF ou SVG")
       return
     }
-    if (file.size > MAX_BYTES) {
-      toast.error("Image trop lourde (5 Mo max)")
+    if (file.size > (isSvg ? MAX_SVG_BYTES : MAX_BYTES)) {
+      toast.error(isSvg ? "SVG trop lourd (512 Ko max)" : "Image trop lourde (5 Mo max)")
       return
     }
     setBusy(true)
     try {
+      if (isSvg) {
+        // SVGs are sanitized and stored by the server
+        const formData = new FormData()
+        formData.append("file", file)
+        const res = await uploadSvgImage(target, ownerId, formData)
+        if ("error" in res) throw new Error(res.error)
+        toast.success(`${label} mis${target === "class-cover" ? "e" : ""} à jour`)
+        router.refresh()
+        return
+      }
       const supabase = createClient()
       const ext = file.name.split(".").pop()?.toLowerCase() || "png"
       const path = `${folder}/${ownerId}/${Date.now()}.${ext}`
@@ -94,7 +111,7 @@ export function ImageUploadButton({ target, ownerId, currentUrl, variant = "over
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg,image/webp,image/gif"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.svg"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0]
