@@ -331,7 +331,7 @@ create policy "cm_delete_tutor"
 
 create policy "cm_insert_student"
   on class_memberships for insert
-  with check (student_id = auth.uid() and auth.role() = 'authenticated');
+  with check (student_id = auth.uid() and status = 'pending' and auth.role() = 'authenticated');
 
 create policy "cm_select_student"
   on class_memberships for select using (student_id = auth.uid());
@@ -372,6 +372,12 @@ create policy "subjects_all_tutor"
 
 -- ─── RLS: questions – extend for tutors ──────────────────────
 
+-- Readable only when the parent subject is visible (subjects RLS applies inside the subquery)
+drop policy if exists "questions_select_auth" on questions;
+create policy "questions_select_auth"
+  on questions for select
+  using (exists (select 1 from subjects s where s.id = questions.subject_id));
+
 drop policy if exists "questions_all_tutor" on questions;
 
 create policy "questions_all_tutor"
@@ -385,6 +391,12 @@ create policy "questions_all_tutor"
   );
 
 -- ─── RLS: answer_options – extend for tutors ─────────────────
+
+-- Readable only when the parent question is visible
+drop policy if exists "options_select_auth" on answer_options;
+create policy "options_select_auth"
+  on answer_options for select
+  using (exists (select 1 from questions q where q.id = answer_options.question_id));
 
 drop policy if exists "options_all_tutor" on answer_options;
 
@@ -408,7 +420,8 @@ drop policy if exists "lessons_all_admin"   on lessons;
 drop policy if exists "lessons_all_tutor"   on lessons;
 
 create policy "lessons_select_auth"
-  on lessons for select using (auth.role() = 'authenticated');
+  on lessons for select
+  using (exists (select 1 from subjects s where s.id = lessons.subject_id));
 
 create policy "lessons_all_admin"
   on lessons for all using (public.is_admin());
