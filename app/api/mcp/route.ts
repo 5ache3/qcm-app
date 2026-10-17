@@ -222,9 +222,8 @@ const handler = createMcpHandler(
   { serverInfo: { name: "qcm-tutor", version: "1.0.0" } }
 )
 
-async function verifyToken(_req: Request, bearerToken?: string): Promise<AuthInfo | undefined> {
-  if (!bearerToken) return undefined
-
+// Personal access token generated on /tutor (Claude Code, Cursor…)
+async function verifyPersonalToken(bearerToken: string): Promise<AuthInfo | undefined> {
   const supabase = createAdminClient()
   const { data: token } = await supabase
     .from("mcp_tokens")
@@ -242,6 +241,34 @@ async function verifyToken(_req: Request, bearerToken?: string): Promise<AuthInf
   return { token: bearerToken, clientId: token.id, scopes: [], extra: { tutorId: token.tutor_id } }
 }
 
-const authHandler = withMcpAuth(handler, verifyToken, { required: true })
+// Access token issued by Supabase Auth's OAuth server (claude.ai connectors)
+async function verifyOAuthToken(bearerToken: string): Promise<AuthInfo | undefined> {
+  const supabase = createAdminClient()
+  const { data } = await supabase.auth.getClaims(bearerToken)
+  const claims = data?.claims
+  // Only accept tokens minted for an OAuth client, not regular app sessions
+  if (!claims?.sub || typeof claims.client_id !== "string") return undefined
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", claims.sub).single()
+  if (profile?.role !== "tutor") return undefined
+
+  return {
+    token: bearerToken,
+    clientId: claims.client_id,
+    scopes: [],
+    expiresAt: claims.exp,
+    extra: { tutorId: claims.sub },
+  }
+}
+
+async function verifyToken(_req: Request, bearerToken?: string): Promise<AuthInfo | undefined> {
+  if (!bearerToken) return undefined
+  return bearerToken.startsWith("qcm_") ? verifyPersonalToken(bearerToken) : verifyOAuthToken(bearerToken)
+}
+
+const authHandler = withMcpAuth(handler, verifyToken, {
+  required: true,
+  resourceMetadataPath: "/.well-known/oauth-protected-resource/api/mcp",
+})
 
 export { authHandler as GET, authHandler as POST }

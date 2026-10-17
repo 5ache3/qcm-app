@@ -57,7 +57,9 @@ export default function LoginPage() {
         setLoading(false)
         return
       }
-      router.push("/dashboard")
+      // Only follow same-site relative paths (set by proxy for the OAuth consent flow)
+      const next = new URLSearchParams(window.location.search).get("next")
+      router.push(next?.startsWith("/") && !next.startsWith("//") ? next : "/dashboard")
       router.refresh()
     } else {
       const { error } = await supabase.auth.signUp({

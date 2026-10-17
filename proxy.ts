@@ -31,9 +31,12 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  const publicPaths = ["/login", "/api/mistakes/typst", "/api/mcp"]
+  const publicPaths = ["/login", "/api/mistakes/typst", "/api/mcp", "/.well-known"]
   if (!user && !publicPaths.some((p) => pathname.startsWith(p))) {
-    return NextResponse.redirect(new URL("/login", request.url))
+    const loginUrl = new URL("/login", request.url)
+    // Return to the OAuth consent screen after signing in
+    if (pathname.startsWith("/oauth/")) loginUrl.searchParams.set("next", pathname + request.nextUrl.search)
+    return NextResponse.redirect(loginUrl)
   }
 
   if (user && pathname === "/login") {
