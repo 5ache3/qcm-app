@@ -25,9 +25,10 @@ interface ClassRow {
 
 interface Props {
   classes: ClassRow[]
+  mcpTokensCard: React.ReactNode
 }
 
-export function TutorDashboardClient({ classes: initial }: Props) {
+export function TutorDashboardClient({ classes: initial, mcpTokensCard }: Props) {
   const router = useRouter()
   const [classes, setClasses] = useState(initial)
   const [showForm, setShowForm] = useState(false)
@@ -172,6 +173,8 @@ export function TutorDashboardClient({ classes: initial }: Props) {
           ))}
         </div>
       )}
+
+      {mcpTokensCard}
     </div>
   )
 }

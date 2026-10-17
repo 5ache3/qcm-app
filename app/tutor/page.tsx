@@ -1,9 +1,11 @@
+import { headers } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { GraduationCap, Users, BookMarked, Plus, ChevronRight, Copy, Trash2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { TutorDashboardClient } from "./TutorDashboardClient"
+import { McpTokensCard } from "./McpTokensCard"
 
 export default async function TutorPage() {
   const supabase = await createClient()
@@ -17,7 +19,7 @@ export default async function TutorPage() {
 
   const classIds = (classes ?? []).map((c) => c.id)
 
-  const [{ data: membershipCounts }, { data: subjectCounts }] = await Promise.all([
+  const [{ data: membershipCounts }, { data: subjectCounts }, { data: mcpTokens }, headerList] = await Promise.all([
     supabase
       .from("class_memberships")
       .select("class_id, status")
@@ -26,7 +28,16 @@ export default async function TutorPage() {
       .from("subjects")
       .select("class_id")
       .in("class_id", classIds.length > 0 ? classIds : ["none"]),
+    supabase
+      .from("mcp_tokens")
+      .select("id, name, created_at, last_used_at")
+      .eq("tutor_id", user!.id)
+      .order("created_at", { ascending: false }),
+    headers(),
   ])
+
+  const host = headerList.get("host")
+  const protocol = headerList.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https")
 
   const memberMap: Record<string, { pending: number; approved: number }> = {}
   for (const m of membershipCounts ?? []) {
@@ -48,6 +59,7 @@ export default async function TutorPage() {
         pendingCount: memberMap[c.id]?.pending ?? 0,
         subjectCount: subjectMap[c.id] ?? 0,
       }))}
+      mcpTokensCard={<McpTokensCard tokens={mcpTokens ?? []} mcpUrl={`${protocol}://${host}/api/mcp`} />}
     />
   )
 }

@@ -554,3 +554,27 @@ begin
   return new;
 end;
 $$;
+
+-- ─── MCP access tokens (tutors) ───────────────────────────────
+-- Personal tokens a tutor pastes into an MCP client. Only the SHA-256 hash is stored.
+
+create table if not exists mcp_tokens (
+  id           uuid primary key default gen_random_uuid(),
+  tutor_id     uuid not null references profiles(id) on delete cascade,
+  name         text not null,
+  token_hash   text unique not null,
+  created_at   timestamptz not null default now(),
+  last_used_at timestamptz
+);
+
+create index if not exists mcp_tokens_tutor_id_idx on mcp_tokens(tutor_id);
+
+alter table mcp_tokens enable row level security;
+
+drop policy if exists "mcp_tokens_select_own" on mcp_tokens;
+drop policy if exists "mcp_tokens_insert_own" on mcp_tokens;
+drop policy if exists "mcp_tokens_delete_own" on mcp_tokens;
+
+create policy "mcp_tokens_select_own" on mcp_tokens for select using (tutor_id = auth.uid());
+create policy "mcp_tokens_insert_own" on mcp_tokens for insert with check (tutor_id = auth.uid() and public.is_tutor());
+create policy "mcp_tokens_delete_own" on mcp_tokens for delete using (tutor_id = auth.uid());

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { generateMcpToken, hashMcpToken } from "@/lib/mcp-tokens"
 
 export async function createClass(formData: FormData) {
   const supabase = await createClient()
@@ -26,6 +27,33 @@ export async function createClass(formData: FormData) {
 export async function deleteClass(classId: string) {
   const supabase = await createClient()
   const { error } = await supabase.from("classes").delete().eq("id", classId)
+  if (error) return { error: error.message }
+  revalidatePath("/tutor")
+  return { success: true }
+}
+
+// The plain token is returned once and never stored; only its hash is saved.
+export async function createMcpToken(name: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Non authentifié" }
+
+  const trimmed = name.trim()
+  if (!trimmed) return { error: "Le nom est requis" }
+
+  const token = generateMcpToken()
+  const { error } = await supabase
+    .from("mcp_tokens")
+    .insert({ tutor_id: user.id, name: trimmed, token_hash: hashMcpToken(token) })
+  if (error) return { error: error.message }
+
+  revalidatePath("/tutor")
+  return { success: true, token }
+}
+
+export async function revokeMcpToken(tokenId: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from("mcp_tokens").delete().eq("id", tokenId)
   if (error) return { error: error.message }
   revalidatePath("/tutor")
   return { success: true }
