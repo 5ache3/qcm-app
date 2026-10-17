@@ -53,6 +53,96 @@ async function lessonInSubject(lessonId: string, subjectId: string) {
   return !!data
 }
 
+const IMAGE_BUCKET = "qcm-images"
+const IMAGE_TYPES: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+  "image/gif": "gif",
+}
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
+// Refuse loopback, link-local and private-range hosts so the server can't be
+// pointed at internal addresses
+function isPublicHttpsUrl(raw: string) {
+  let url: URL
+  try {
+    url = new URL(raw)
+  } catch {
+    return false
+  }
+  if (url.protocol !== "https:") return false
+  const host = url.hostname.replace(/^\[|\]$/g, "").toLowerCase()
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".internal") || host.endsWith(".local")) return false
+  if (/^(127\.|10\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) return false
+  if (host.includes(":")) return false // IPv6 literals
+  return true
+}
+
+// Downloads an image, stores it under <folder>/<ownerId>/ and saves its public
+// URL in <table>.<column>; a null imageUrl clears the image. The previous file
+// is removed from storage either way.
+async function setStoredImage(
+  target: { table: "classes" | "subjects"; column: "cover_url" | "logo_url"; folder: "classes" | "subjects" },
+  ownerId: string,
+  imageUrl: string | null
+): Promise<ToolResult> {
+  const supabase = createAdminClient()
+  const { data: row } = await supabase.from(target.table).select(target.column).eq("id", ownerId).single()
+  const previousUrl = (row as Record<string, string | null> | null)?.[target.column] ?? null
+
+  let newUrl: string | null = null
+  if (imageUrl) {
+    if (!isPublicHttpsUrl(imageUrl)) return fail("image_url must be a public https URL")
+
+    // Follow redirects by hand so every hop gets the same public-URL check
+    let res: Response | null = null
+    let nextUrl = imageUrl
+    try {
+      for (let hop = 0; hop < 4; hop++) {
+        if (!isPublicHttpsUrl(nextUrl)) return fail("image_url must be a public https URL")
+        const r = await fetch(nextUrl, { redirect: "manual", signal: AbortSignal.timeout(10_000) })
+        const location = r.headers.get("location")
+        if (r.status >= 300 && r.status < 400 && location) {
+          nextUrl = new URL(location, nextUrl).toString()
+          continue
+        }
+        res = r
+        break
+      }
+    } catch {
+      return fail("Could not download the image")
+    }
+    if (!res) return fail("Too many redirects")
+    if (!res.ok) return fail(`Could not download the image (HTTP ${res.status})`)
+
+    const contentType = (res.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase()
+    const ext = IMAGE_TYPES[contentType]
+    if (!ext) return fail("Unsupported image type; use PNG, JPEG, WebP or GIF")
+
+    const bytes = await res.arrayBuffer()
+    if (bytes.byteLength > MAX_IMAGE_BYTES) return fail("Image is larger than 5 MB")
+
+    const path = `${target.folder}/${ownerId}/${Date.now()}.${ext}`
+    const { error: uploadError } = await supabase.storage
+      .from(IMAGE_BUCKET)
+      .upload(path, bytes, { contentType })
+    if (uploadError) return fail(uploadError.message)
+    newUrl = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path).data.publicUrl
+  }
+
+  const { error } = await supabase.from(target.table).update({ [target.column]: newUrl }).eq("id", ownerId)
+  if (error) return fail(error.message)
+
+  const marker = `/object/public/${IMAGE_BUCKET}/`
+  const i = previousUrl?.indexOf(marker) ?? -1
+  if (previousUrl && i !== -1) {
+    await supabase.storage.from(IMAGE_BUCKET).remove([decodeURIComponent(previousUrl.slice(i + marker.length))])
+  }
+
+  return ok({ id: ownerId, [target.column]: newUrl })
+}
+
 const questionSchema = z.object({
   question_text: z.string().min(1),
   explanation: z.string().optional().describe("Shown to students after they answer"),
@@ -79,7 +169,7 @@ const handler = createMcpHandler(
 
         const { data: classes, error } = await supabase
           .from("classes")
-          .select("id, name, description, invite_code, created_at")
+          .select("id, name, description, invite_code, cover_url, created_at")
           .eq("tutor_id", tutorId)
           .order("created_at", { ascending: false })
         if (error) return fail(error.message)
@@ -89,7 +179,7 @@ const handler = createMcpHandler(
 
         const [{ data: memberships }, { data: subjects }] = await Promise.all([
           supabase.from("class_memberships").select("class_id, status").in("class_id", classIds),
-          supabase.from("subjects").select("id, name, description, due_date, class_id").in("class_id", classIds),
+          supabase.from("subjects").select("id, name, description, logo_url, due_date, class_id").in("class_id", classIds),
         ])
 
         const subjectIds = (subjects ?? []).map((s) => s.id)
@@ -115,6 +205,7 @@ const handler = createMcpHandler(
                   id: s.id,
                   name: s.name,
                   description: s.description,
+                  logo_url: s.logo_url,
                   due_date: s.due_date,
                   question_count: questionCountMap[s.id] ?? 0,
                 })),
@@ -243,6 +334,44 @@ const handler = createMcpHandler(
           .single()
         if (error) return fail(error.message)
         return ok(data)
+      }
+    )
+
+    server.registerTool(
+      "set_class_cover",
+      {
+        title: "Set a class cover image",
+        description:
+          "Set the cover picture of one of the tutor's classes from a public https image URL (PNG, JPEG, WebP or GIF, max 5 MB). The image is copied into the app's storage. Pass image_url null to remove the cover.",
+        inputSchema: z.object({
+          class_id: z.string().uuid(),
+          image_url: z.string().url().nullable(),
+        }),
+      },
+      async ({ class_id, image_url }, ctx) => {
+        const tutorId = getTutorId(ctx.http?.authInfo)
+        if (!(await tutorOwnsClass(tutorId, class_id))) return fail("Class not found or not yours")
+        return setStoredImage({ table: "classes", column: "cover_url", folder: "classes" }, class_id, image_url)
+      }
+    )
+
+    server.registerTool(
+      "set_subject_logo",
+      {
+        title: "Set a subject logo",
+        description:
+          "Set the logo of a subject (matière) in one of the tutor's classes from a public https image URL (PNG, JPEG, WebP or GIF, max 5 MB). The image is copied into the app's storage. Pass image_url null to remove the logo.",
+        inputSchema: z.object({
+          subject_id: z.string().uuid(),
+          image_url: z.string().url().nullable(),
+        }),
+      },
+      async ({ subject_id, image_url }, ctx) => {
+        const tutorId = getTutorId(ctx.http?.authInfo)
+        if (!(await getOwnedSubject(tutorId, subject_id))) {
+          return fail("Subject not found or not in one of your classes")
+        }
+        return setStoredImage({ table: "subjects", column: "logo_url", folder: "subjects" }, subject_id, image_url)
       }
     )
 
