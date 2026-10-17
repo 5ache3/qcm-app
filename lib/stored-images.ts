@@ -1,5 +1,4 @@
 import { createAdminClient } from "@/lib/supabase/admin"
-import { sanitizeSvg } from "@/lib/sanitize-svg"
 
 // Server-side image storage for class covers and subject logos. Raster images
 // go to qcm-images (browsers may also upload there, see ImageUploadButton).
@@ -28,8 +27,10 @@ type Failure = { error: string }
 
 type Prepared = { body: ArrayBuffer | string; contentType: string; ext: string; bucket: string }
 
-function prepare(input: ImageInput): Prepared | Failure {
+async function prepare(input: ImageInput): Promise<Prepared | Failure> {
   if (input.contentType === SVG_TYPE) {
+    // Loaded on demand so a problem with jsdom only affects SVG uploads
+    const { sanitizeSvg } = await import("@/lib/sanitize-svg")
     const result = sanitizeSvg(new TextDecoder().decode(input.bytes))
     if ("error" in result) return result
     return { body: result.svg, contentType: SVG_TYPE, ext: "svg", bucket: SVG_BUCKET }
@@ -65,7 +66,7 @@ export async function setStoredImage(
 
   let newUrl: string | null = null
   if (input) {
-    const prepared = prepare(input)
+    const prepared = await prepare(input)
     if ("error" in prepared) return prepared
     const path = `${folder}/${ownerId}/${Date.now()}.${prepared.ext}`
     const { error } = await supabase.storage
