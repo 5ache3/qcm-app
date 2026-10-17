@@ -5,6 +5,7 @@ import { BookMarked, ChevronRight, Calendar, GraduationCap } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { SubjectLogo } from "@/components/SubjectLogo"
 
 function sortSubjectsByDueDate<T extends { due_date: string | null }>(subjects: T[]): T[] {
   const today = new Date()
@@ -36,7 +37,7 @@ export default async function SubjectsPage() {
 
   const { data: rawSubjects } = await supabase
     .from("subjects")
-    .select("id, name, description, icon, due_date, class_id, classes(name), questions!inner(id)")
+    .select("id, name, description, icon, logo_url, due_date, class_id, classes(name), questions!inner(id)")
 
   const allSubjects = rawSubjects ?? []
 
@@ -97,16 +98,14 @@ export default async function SubjectsPage() {
 
     return (
       <Link href={`/subjects/${subject.id}`}>
-        <Card className={`h-full hover:shadow-md transition-shadow cursor-pointer group ${isPastDue ? "opacity-60" : ""}`}>
+        <Card className={`h-full cursor-pointer group transition-all hover:-translate-y-0.5 hover:shadow-lift ${isPastDue ? "opacity-60" : ""}`}>
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-xl">
-                  {subject.icon ?? "📚"}
-                </div>
+                <SubjectLogo name={subject.name} logoUrl={subject.logo_url} icon={subject.icon} />
                 <CardTitle className="text-base">{subject.name}</CardTitle>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary rtl:rotate-180" />
             </div>
           </CardHeader>
           <CardContent className="space-y-3">

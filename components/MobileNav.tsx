@@ -52,7 +52,7 @@ export function MobileNav({ role, unreadCount }: Props) {
   const navItems = role === "admin" ? adminNav : role === "tutor" ? tutorNav : studentNav
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t bg-card md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t bg-card/85 backdrop-blur-lg pb-[env(safe-area-inset-bottom)] md:hidden">
       {navItems.map(({ href, label, icon: Icon }) => {
         const active =
           pathname === href ||
@@ -67,7 +67,7 @@ export function MobileNav({ role, unreadCount }: Props) {
               active ? "text-primary" : "text-muted-foreground"
             )}
           >
-            <span className="relative">
+            <span className={cn("relative flex h-7 w-12 items-center justify-center rounded-full transition-colors", active && "bg-primary-soft")}>
               <Icon className={cn("h-5 w-5", active ? "text-primary" : "text-muted-foreground")} />
               {isBell && unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground leading-none">

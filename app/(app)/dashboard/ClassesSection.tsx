@@ -11,17 +11,21 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { joinClass } from "@/app/(app)/profile/actions"
+import { ClassCover } from "@/components/ClassCover"
+import { SubjectLogo } from "@/components/SubjectLogo"
 
 interface SubjectRow {
   id: string
   name: string
   icon: string | null
+  logo_url: string | null
   due_date: string | null
 }
 
 interface ClassRow {
   classId: string
   className: string
+  coverUrl: string | null
   status: "pending" | "approved"
   subjects: SubjectRow[]
 }
@@ -49,7 +53,7 @@ export function ClassesSection({ classes: initial }: Props) {
       toast.success(`Demande envoyée pour "${res.className}". En attente d'approbation.`)
       setClasses((prev) => [
         ...prev,
-        { classId: crypto.randomUUID(), className: res.className!, status: "pending", subjects: [] },
+        { classId: crypto.randomUUID(), className: res.className!, coverUrl: null, status: "pending", subjects: [] },
       ])
       setCode("")
       setShowJoin(false)
@@ -117,23 +121,25 @@ export function ClassesSection({ classes: initial }: Props) {
         {!selectedClass && (
           <div className="space-y-3">
             {approved.length > 0 && (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {approved.map((c) => (
                   <button
                     key={c.classId}
                     onClick={() => setSelectedClassId(c.classId)}
-                    className="flex items-center justify-between rounded-lg border bg-card px-4 py-3 text-left hover:bg-accent hover:text-accent-foreground transition-colors group"
+                    className="group overflow-hidden rounded-2xl border border-border/70 bg-card text-start shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift"
                   >
-                    <div className="flex items-center gap-3">
-                      <GraduationCap className="h-4 w-4 text-primary shrink-0" />
-                      <div>
-                        <p className="font-medium text-sm">{c.className}</p>
+                    <ClassCover name={c.className} coverUrl={c.coverUrl} className="h-24">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+                    </ClassCover>
+                    <div className="flex items-center justify-between gap-2 px-4 py-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm truncate">{c.className}</p>
                         <p className="text-xs text-muted-foreground">
                           {c.subjects.length} matière{c.subjects.length !== 1 ? "s" : ""}
                         </p>
                       </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 rtl:rotate-180 shrink-0" />
                     </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
                   </button>
                 ))}
               </div>
@@ -147,7 +153,7 @@ export function ClassesSection({ classes: initial }: Props) {
                 {pending.map((c) => (
                   <div
                     key={c.classId}
-                    className="flex items-center justify-between rounded-lg border border-dashed px-4 py-3 opacity-60"
+                    className="flex items-center justify-between rounded-xl border border-dashed px-4 py-3 opacity-70"
                   >
                     <div className="flex items-center gap-3">
                       <GraduationCap className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -183,8 +189,8 @@ export function ClassesSection({ classes: initial }: Props) {
 
                   return (
                     <Link key={s.id} href={`/subjects/${s.id}`}>
-                      <div className={`flex items-center gap-3 rounded-lg border bg-card px-4 py-3 hover:bg-accent hover:text-accent-foreground transition-colors group ${isPastDue ? "opacity-60" : ""}`}>
-                        <span className="text-xl shrink-0">{s.icon ?? "📚"}</span>
+                      <div className={`flex items-center gap-3 rounded-xl border border-border/70 bg-card px-4 py-3 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift group ${isPastDue ? "opacity-60" : ""}`}>
+                        <SubjectLogo name={s.name} logoUrl={s.logo_url} icon={s.icon} className="h-10 w-10 text-lg" />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{s.name}</p>
                           {dueDate && (

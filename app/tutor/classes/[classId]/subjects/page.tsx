@@ -25,7 +25,7 @@ export default async function ClassSubjectsPage({ params }: Props) {
 
   const { data: subjectsRaw } = await supabase
     .from("subjects")
-    .select("id, name, description, icon, due_date, created_at, questions(id)")
+    .select("id, name, description, icon, logo_url, due_date, created_at, questions(id)")
     .eq("class_id", classId)
     .order("name")
 
@@ -37,13 +37,15 @@ export default async function ClassSubjectsPage({ params }: Props) {
 
   return (
     <div>
-      <div className="flex items-center gap-3 p-4 sm:p-6 pb-0">
+      <div className="flex items-center gap-2 p-4 sm:p-6 pb-0">
         <Button variant="ghost" size="icon" asChild>
           <Link href={`/tutor/classes/${classId}`}><ArrowLeft className="h-4 w-4" /></Link>
         </Button>
-        <p className="text-sm text-muted-foreground">{cls.name}</p>
+        <p className="text-sm font-medium text-muted-foreground">{cls.name}</p>
       </div>
       <SubjectsClassClient
+        // Remount when a logo changes so the client list picks up the new URL
+        key={subjects.map((s) => s.logo_url ?? "").join("|")}
         classId={classId}
         subjects={subjects ?? []}
         questionCountMap={questionCountMap}

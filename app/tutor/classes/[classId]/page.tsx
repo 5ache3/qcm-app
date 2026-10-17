@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ClassInviteCode } from "./ClassInviteCode"
 import { ClassHeaderEdit } from "./ClassHeaderEdit"
+import { ClassCover } from "@/components/ClassCover"
+import { ImageUploadButton } from "@/components/ImageUploadButton"
 
 interface Props {
   params: Promise<{ classId: string }>
@@ -19,7 +21,7 @@ export default async function ClassOverviewPage({ params }: Props) {
 
   const { data: cls } = await supabase
     .from("classes")
-    .select("id, name, description, invite_code, created_at")
+    .select("id, name, description, invite_code, cover_url, created_at")
     .eq("id", classId)
     .eq("tutor_id", user!.id)
     .single()
@@ -42,10 +44,15 @@ export default async function ClassOverviewPage({ params }: Props) {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <div className="flex items-start gap-3">
-        <Button variant="ghost" size="icon" className="shrink-0 mt-1" asChild>
+      <ClassCover name={cls.name} coverUrl={cls.cover_url} className="h-40 rounded-2xl shadow-soft sm:h-52">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
+        <Button variant="ghost" size="icon" className="absolute start-3 top-3 bg-black/45 text-white backdrop-blur-md hover:bg-black/60 hover:text-white" asChild>
           <Link href="/tutor"><ArrowLeft className="h-4 w-4" /></Link>
         </Button>
+        <ImageUploadButton target="class-cover" ownerId={classId} currentUrl={cls.cover_url} className="absolute end-3 top-3" />
+      </ClassCover>
+
+      <div className="flex items-start gap-3">
         <ClassHeaderEdit
           classId={classId}
           name={cls.name}

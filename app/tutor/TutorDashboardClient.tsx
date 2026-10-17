@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { ClassCover } from "@/components/ClassCover"
+import { ImageUploadButton } from "@/components/ImageUploadButton"
 import { createClass, deleteClass } from "./actions"
 
 interface ClassRow {
@@ -17,6 +19,7 @@ interface ClassRow {
   name: string
   description: string | null
   invite_code: string
+  cover_url: string | null
   created_at: string
   memberCount: number
   pendingCount: number
@@ -30,7 +33,8 @@ interface Props {
 
 export function TutorDashboardClient({ classes: initial, mcpTokensCard }: Props) {
   const router = useRouter()
-  const [classes, setClasses] = useState(initial)
+  const [deletedIds, setDeletedIds] = useState<string[]>([])
+  const classes = initial.filter((c) => !deletedIds.includes(c.id))
   const [showForm, setShowForm] = useState(false)
   const [isPending, startTransition] = useTransition()
 
@@ -50,7 +54,7 @@ export function TutorDashboardClient({ classes: initial, mcpTokensCard }: Props)
       const res = await deleteClass(classId)
       if (res.error) { toast.error(res.error); return }
       toast.success("Classe supprimée")
-      setClasses((prev) => prev.filter((c) => c.id !== classId))
+      setDeletedIds((prev) => [...prev, classId])
     })
   }
 
@@ -61,10 +65,12 @@ export function TutorDashboardClient({ classes: initial, mcpTokensCard }: Props)
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <GraduationCap className="h-6 w-6" />
+          <h1 className="text-2xl font-bold flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary">
+              <GraduationCap className="h-5 w-5" />
+            </span>
             Mes classes
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -101,18 +107,33 @@ export function TutorDashboardClient({ classes: initial, mcpTokensCard }: Props)
       )}
 
       {classes.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <GraduationCap className="h-12 w-12 mx-auto mb-3 opacity-30" />
+        <div className="rounded-2xl border border-dashed bg-card/60 text-center py-16 text-muted-foreground">
+          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+            <GraduationCap className="h-7 w-7" />
+          </span>
           <p className="font-medium">Aucune classe pour l&apos;instant.</p>
           <p className="text-sm mt-1">Créez votre première classe pour commencer.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {classes.map((cls) => (
-            <Card key={cls.id} className="group hover:shadow-md transition-shadow">
-              <CardHeader className="pb-2">
+            <Card key={cls.id} className="group overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lift">
+              <ClassCover name={cls.name} coverUrl={cls.cover_url} className="h-32">
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent" />
+                <ImageUploadButton
+                  target="class-cover"
+                  ownerId={cls.id}
+                  currentUrl={cls.cover_url}
+                  className="absolute end-2 top-2 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
+                />
+              </ClassCover>
+              <CardHeader className="pb-2 pt-4">
                 <div className="flex items-start justify-between">
-                  <CardTitle className="text-base leading-tight">{cls.name}</CardTitle>
+                  <CardTitle className="text-base leading-tight">
+                    <Link href={`/tutor/classes/${cls.id}`} className="hover:text-primary transition-colors">
+                      {cls.name}
+                    </Link>
+                  </CardTitle>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -147,7 +168,7 @@ export function TutorDashboardClient({ classes: initial, mcpTokensCard }: Props)
 
                 <button
                   onClick={() => copyCode(cls.invite_code)}
-                  className="flex items-center gap-2 w-full rounded-lg bg-muted px-3 py-2 text-xs font-mono hover:bg-muted/80 transition-colors"
+                  className="flex items-center gap-2 w-full rounded-xl bg-primary-soft/60 px-3 py-2 text-xs font-mono hover:bg-primary-soft transition-colors"
                 >
                   <span className="text-muted-foreground">Code :</span>
                   <span className="font-semibold tracking-widest">{cls.invite_code}</span>

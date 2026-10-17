@@ -578,3 +578,84 @@ drop policy if exists "mcp_tokens_delete_own" on mcp_tokens;
 create policy "mcp_tokens_select_own" on mcp_tokens for select using (tutor_id = auth.uid());
 create policy "mcp_tokens_insert_own" on mcp_tokens for insert with check (tutor_id = auth.uid() and public.is_tutor());
 create policy "mcp_tokens_delete_own" on mcp_tokens for delete using (tutor_id = auth.uid());
+
+-- ─── Images: class covers + subject logos ─────────────────────
+-- Safe to run more than once.
+
+-- 1. Columns (subjects.icon emoji stays as a fallback)
+alter table classes
+  add column if not exists cover_url text;
+
+alter table subjects
+  add column if not exists logo_url text;
+
+-- 2. Public bucket, images only, max 5 MB.
+--    SVG is excluded on purpose (it can carry scripts).
+insert into storage.buckets
+  (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'qcm-images', 'qcm-images', true, 5242880,
+  array['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+)
+on conflict (id) do update set
+  public             = excluded.public,
+  file_size_limit    = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+-- 3. Who can write files. Paths:
+--      classes/<class_id>/<file>    → class cover
+--      subjects/<subject_id>/<file> → subject logo
+--    Reading needs no policy: the bucket is public.
+
+create or replace function public.can_manage_image(p_name text)
+returns boolean
+language sql security definer stable
+set search_path = public
+as $$
+  select
+    public.is_admin()
+    or (
+      (storage.foldername(p_name))[1] = 'classes'
+      and exists (
+        select 1 from classes c
+        where c.id::text = (storage.foldername(p_name))[2]
+          and c.tutor_id = auth.uid()
+      )
+    )
+    or (
+      (storage.foldername(p_name))[1] = 'subjects'
+      and exists (
+        select 1 from subjects s
+        join classes c on c.id = s.class_id
+        where s.id::text = (storage.foldername(p_name))[2]
+          and c.tutor_id = auth.uid()
+      )
+    );
+$$;
+
+drop policy if exists "qcm_images_insert" on storage.objects;
+drop policy if exists "qcm_images_update" on storage.objects;
+drop policy if exists "qcm_images_delete" on storage.objects;
+
+create policy "qcm_images_insert"
+  on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'qcm-images'
+    and public.can_manage_image(name)
+  );
+
+create policy "qcm_images_update"
+  on storage.objects for update to authenticated
+  using (
+    bucket_id = 'qcm-images'
+    and public.can_manage_image(name)
+  );
+
+create policy "qcm_images_delete"
+  on storage.objects for delete to authenticated
+  using (
+    bucket_id = 'qcm-images'
+    and public.can_manage_image(name)
+  );
+
+notify pgrst, 'reload schema';

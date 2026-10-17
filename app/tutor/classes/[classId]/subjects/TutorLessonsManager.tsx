@@ -82,7 +82,7 @@ export function TutorLessonsManager({ classId, subjectId }: Props) {
   }
 
   return (
-    <div className="mt-3 border-t pt-3 space-y-2">
+    <div className="border-t pt-4 space-y-2">
       <div className="flex items-center justify-between">
         <button
           className="text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
@@ -113,7 +113,7 @@ export function TutorLessonsManager({ classId, subjectId }: Props) {
             {lessons.map((lesson) => {
               const isEditing = editingId === lesson.id
               return (
-                <div key={lesson.id} className="flex items-start gap-2 rounded-lg border px-3 py-2 text-sm">
+                <div key={lesson.id} className="flex items-start gap-2 rounded-xl bg-muted/60 px-3 py-2 text-sm transition-colors hover:bg-primary-soft/60">
                   {isEditing ? (
                     <>
                       <div className="flex-1 space-y-1.5">
@@ -146,7 +146,7 @@ export function TutorLessonsManager({ classId, subjectId }: Props) {
             })}
           </div>
           {showAdd && (
-            <div className="flex items-start gap-2 rounded-lg border border-dashed border-primary/50 px-3 py-2">
+            <div className="flex items-start gap-2 rounded-xl border border-dashed border-primary/50 bg-primary-soft/30 px-3 py-2">
               <div className="flex-1 space-y-1.5">
                 <Input className="h-7 text-xs" placeholder="Nom du cours" value={newName} autoFocus
                   onChange={(e) => setNewName(e.target.value)}

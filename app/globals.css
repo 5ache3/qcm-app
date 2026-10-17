@@ -20,54 +20,67 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-sans: var(--font-geist-sans);
+  --color-primary-soft: var(--primary-soft);
+  --color-sidebar: var(--sidebar);
+  --font-sans: var(--font-jakarta), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
+@theme {
+  --shadow-soft: 0 1px 2px rgb(27 26 64 / 0.04), 0 6px 20px -8px rgb(27 26 64 / 0.10);
+  --shadow-lift: 0 2px 4px rgb(27 26 64 / 0.05), 0 16px 36px -12px rgb(27 26 64 / 0.18);
+}
+
+/* Theme: calm academic — indigo/violet on soft off-white.
+   Change the palette here; every component reads these tokens. */
 :root {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
+  --background: #f6f6fb;
+  --foreground: #1b1a2e;
   --card: #ffffff;
-  --card-foreground: #0a0a0a;
+  --card-foreground: #1b1a2e;
   --popover: #ffffff;
-  --popover-foreground: #0a0a0a;
-  --primary: #18181b;
-  --primary-foreground: #fafafa;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
-  --destructive: #ef4444;
-  --destructive-foreground: #fafafa;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #18181b;
-  --radius: 0.5rem;
+  --popover-foreground: #1b1a2e;
+  --primary: #5b52e0;
+  --primary-foreground: #ffffff;
+  --primary-soft: #eceafd;
+  --secondary: #efeef8;
+  --secondary-foreground: #33306b;
+  --muted: #f0f0f6;
+  --muted-foreground: #6a6984;
+  --accent: #eceafd;
+  --accent-foreground: #4338ca;
+  --destructive: #e5484d;
+  --destructive-foreground: #ffffff;
+  --border: #e5e4ef;
+  --input: #dddcea;
+  --ring: #5b52e0;
+  --sidebar: #fbfbfe;
+  --radius: 0.875rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #09090b;
-    --foreground: #fafafa;
-    --card: #09090b;
-    --card-foreground: #fafafa;
-    --popover: #09090b;
-    --popover-foreground: #fafafa;
-    --primary: #fafafa;
-    --primary-foreground: #18181b;
-    --secondary: #27272a;
-    --secondary-foreground: #fafafa;
-    --muted: #27272a;
-    --muted-foreground: #a1a1aa;
-    --accent: #27272a;
-    --accent-foreground: #fafafa;
-    --destructive: #7f1d1d;
-    --destructive-foreground: #fafafa;
-    --border: #27272a;
-    --input: #27272a;
-    --ring: #d4d4d8;
+    --background: #0e0d18;
+    --foreground: #ecebf6;
+    --card: #161526;
+    --card-foreground: #ecebf6;
+    --popover: #161526;
+    --popover-foreground: #ecebf6;
+    --primary: #8f88ff;
+    --primary-foreground: #12111f;
+    --primary-soft: #252248;
+    --secondary: #221f38;
+    --secondary-foreground: #d9d7f7;
+    --muted: #1d1b30;
+    --muted-foreground: #9c9ab8;
+    --accent: #252248;
+    --accent-foreground: #c4c0ff;
+    --destructive: #f2555a;
+    --destructive-foreground: #ffffff;
+    --border: #2a2842;
+    --input: #322f4d;
+    --ring: #8f88ff;
+    --sidebar: #12111f;
   }
 }
 
@@ -75,10 +88,14 @@
   border-color: var(--border);
 }
 
+h1, h2, h3 {
+  letter-spacing: -0.02em;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 

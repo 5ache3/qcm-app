@@ -13,7 +13,7 @@ export default async function TutorPage() {
 
   const { data: classes } = await supabase
     .from("classes")
-    .select("id, name, description, invite_code, created_at")
+    .select("id, name, description, invite_code, cover_url, created_at")
     .eq("tutor_id", user!.id)
     .order("created_at", { ascending: false })
 

@@ -6,6 +6,7 @@ import { BookOpen, Timer, History, ArrowLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { SubjectLogo } from "@/components/SubjectLogo"
 
 interface Props {
   params: Promise<{ subjectId: string }>
@@ -89,9 +90,7 @@ export default async function SubjectPage({ params }: Props) {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-3xl">
-          {subject.icon ?? "📚"}
-        </div>
+        <SubjectLogo name={subject.name} logoUrl={subject.logo_url} icon={subject.icon} className="h-16 w-16 rounded-2xl text-3xl" />
         <div>
           <h1 className="text-2xl font-bold">{subject.name}</h1>
           {subject.description && (

@@ -9,12 +9,15 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { createClassSubject, deleteClassSubject, updateClassSubject } from "./actions"
 import { TutorLessonsManager } from "./TutorLessonsManager"
+import { SubjectLogo } from "@/components/SubjectLogo"
+import { ImageUploadButton } from "@/components/ImageUploadButton"
 
 interface Subject {
   id: string
   name: string
   description: string | null
   icon: string | null
+  logo_url: string | null
   due_date: string | null
   created_at: string
 }
@@ -81,8 +84,13 @@ export function SubjectsClassClient({ classId, subjects: initial, questionCountM
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Matières de la classe</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Matières de la classe</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {subjects.length} matière{subjects.length !== 1 ? "s" : ""} · ajoutez un logo, des cours et des questions
+          </p>
+        </div>
         <Button onClick={() => setShowForm((v) => !v)} variant={showForm ? "outline" : "default"}>
           <Plus className="h-4 w-4 me-2" />
           {showForm ? "Annuler" : "Nouvelle matière"}
@@ -123,16 +131,18 @@ export function SubjectsClassClient({ classId, subjects: initial, questionCountM
       )}
 
       {subjects.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-30" />
+        <div className="rounded-2xl border border-dashed bg-card/60 text-center py-14 text-muted-foreground">
+          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+            <BookMarked className="h-7 w-7" />
+          </span>
           <p>Aucune matière. Créez-en une pour commencer.</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 items-start">
           {subjects.map((subject) => {
             const isEditing = editingId === subject.id
             return (
-              <div key={subject.id} className="rounded-lg border bg-card p-4 space-y-3">
+              <div key={subject.id} className="rounded-2xl border border-border/70 bg-card p-5 space-y-4 shadow-soft transition-shadow hover:shadow-lift">
                 {isEditing ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-[auto_1fr] gap-3 items-start">
@@ -190,11 +200,11 @@ export function SubjectsClassClient({ classId, subjects: initial, questionCountM
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-2xl shrink-0">{subject.icon ?? "📚"}</span>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <SubjectLogo name={subject.name} logoUrl={subject.logo_url} icon={subject.icon} className="h-12 w-12" />
                       <div className="min-w-0">
-                        <p className="font-medium truncate">{subject.name}</p>
+                        <p className="font-semibold truncate">{subject.name}</p>
                         <div className="flex items-center gap-2 flex-wrap">
                           {subject.description && (
                             <p className="text-sm text-muted-foreground truncate">{subject.description}</p>
@@ -204,11 +214,12 @@ export function SubjectsClassClient({ classId, subjects: initial, questionCountM
                               📅 {new Date(subject.due_date + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
                             </p>
                           )}
-                          <p className="text-xs text-muted-foreground">{questionCountMap[subject.id] ?? 0} question{(questionCountMap[subject.id] ?? 0) !== 1 ? "s" : ""}</p>
+                          <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">{questionCountMap[subject.id] ?? 0} question{(questionCountMap[subject.id] ?? 0) !== 1 ? "s" : ""}</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
+                      <ImageUploadButton target="subject-logo" ownerId={subject.id} currentUrl={subject.logo_url} variant="plain" />
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => startEdit(subject)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
