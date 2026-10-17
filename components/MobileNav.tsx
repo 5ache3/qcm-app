@@ -64,11 +64,11 @@ export function MobileNav({ role, unreadCount }: Props) {
             href={href}
             className={cn(
               "flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium transition-colors",
-              active ? "text-primary" : "text-muted-foreground"
+              active ? "text-foreground" : "text-muted-foreground"
             )}
           >
             <span className={cn("relative flex h-7 w-12 items-center justify-center rounded-full transition-colors", active && "bg-primary-soft")}>
-              <Icon className={cn("h-5 w-5", active ? "text-primary" : "text-muted-foreground")} />
+              <Icon className={cn("h-5 w-5", active ? "text-primary-soft-foreground" : "text-muted-foreground")} />
               {isBell && unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground leading-none">
                   {unreadCount > 9 ? "9+" : unreadCount}

@@ -160,6 +160,12 @@ export type Dict = {
   profile_reset_sent: string
   profile_reset_sent_toast: string
   profile_your_name: string
+  profile_appearance: string
+  profile_appearance_desc: string
+  profile_language: string
+  profile_stat_classes: string
+  profile_stat_students: string
+  profile_stat_answers: string
 
   // Admin overview
   admin_overview_title: string
@@ -440,6 +446,12 @@ const fr: Dict = {
   profile_reset_sent: "E-mail envoyé",
   profile_reset_sent_toast: "E-mail de réinitialisation envoyé",
   profile_your_name: "Votre nom",
+  profile_appearance: "Apparence",
+  profile_appearance_desc: "Choisissez le thème de l'application. Il s'applique tout de suite.",
+  profile_language: "Langue",
+  profile_stat_classes: "Classes",
+  profile_stat_students: "Étudiants",
+  profile_stat_answers: "Réponses",
 
   // Admin overview
   admin_overview_title: "Vue d'ensemble",
@@ -720,6 +732,12 @@ const ar: Dict = {
   profile_reset_sent: "تم الإرسال",
   profile_reset_sent_toast: "تم إرسال بريد إعادة التعيين",
   profile_your_name: "اسمك",
+  profile_appearance: "المظهر",
+  profile_appearance_desc: "اختر سمة التطبيق. تُطبَّق فوراً.",
+  profile_language: "اللغة",
+  profile_stat_classes: "الأقسام",
+  profile_stat_students: "الطلاب",
+  profile_stat_answers: "الإجابات",
 
   // Admin overview
   admin_overview_title: "نظرة عامة",

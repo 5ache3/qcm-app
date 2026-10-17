@@ -126,11 +126,10 @@ export function ClassesSection({ classes: initial }: Props) {
                   <button
                     key={c.classId}
                     onClick={() => setSelectedClassId(c.classId)}
-                    className="group overflow-hidden rounded-2xl border border-border/70 bg-card text-start shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift"
+                    className="group overflow-hidden rounded-2xl border bg-card text-start shadow-soft transition-all hover:shadow-lift"
                   >
                     <ClassCover name={c.className} coverUrl={c.coverUrl} className="h-24">
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
-                    </ClassCover>
+                                          </ClassCover>
                     <div className="flex items-center justify-between gap-2 px-4 py-3">
                       <div className="min-w-0">
                         <p className="font-semibold text-sm truncate">{c.className}</p>
@@ -189,7 +188,7 @@ export function ClassesSection({ classes: initial }: Props) {
 
                   return (
                     <Link key={s.id} href={`/subjects/${s.id}`}>
-                      <div className={`flex items-center gap-3 rounded-xl border border-border/70 bg-card px-4 py-3 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift group ${isPastDue ? "opacity-60" : ""}`}>
+                      <div className={`flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-soft transition-all hover:shadow-lift group ${isPastDue ? "opacity-60" : ""}`}>
                         <SubjectLogo name={s.name} logoUrl={s.logo_url} icon={s.icon} className="h-10 w-10 text-lg" />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{s.name}</p>

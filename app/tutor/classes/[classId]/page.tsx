@@ -45,8 +45,7 @@ export default async function ClassOverviewPage({ params }: Props) {
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <ClassCover name={cls.name} coverUrl={cls.cover_url} className="h-40 rounded-2xl shadow-soft sm:h-52">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
-        <Button variant="ghost" size="icon" className="absolute start-3 top-3 bg-black/45 text-white backdrop-blur-md hover:bg-black/60 hover:text-white" asChild>
+                <Button variant="ghost" size="icon" className="absolute start-3 top-3 bg-black/45 text-white backdrop-blur-md hover:bg-black/60 hover:text-white" asChild>
           <Link href="/tutor"><ArrowLeft className="h-4 w-4" /></Link>
         </Button>
         <ImageUploadButton target="class-cover" ownerId={classId} currentUrl={cls.cover_url} className="absolute end-3 top-3" />
@@ -65,7 +64,7 @@ export default async function ClassOverviewPage({ params }: Props) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="pt-5 pb-4 flex items-center gap-3">
-            <Users className="h-8 w-8 text-primary/60" />
+            <Users className="h-8 w-8 text-brand/70" />
             <div>
               <p className="text-2xl font-bold">{approved}</p>
               <p className="text-xs text-muted-foreground">
@@ -79,7 +78,7 @@ export default async function ClassOverviewPage({ params }: Props) {
         </Card>
         <Card>
           <CardContent className="pt-5 pb-4 flex items-center gap-3">
-            <BookMarked className="h-8 w-8 text-primary/60" />
+            <BookMarked className="h-8 w-8 text-brand/70" />
             <div>
               <p className="text-2xl font-bold">{subjects?.length ?? 0}</p>
               <p className="text-xs text-muted-foreground">matière{(subjects?.length ?? 0) !== 1 ? "s" : ""}</p>
@@ -88,7 +87,7 @@ export default async function ClassOverviewPage({ params }: Props) {
         </Card>
         <Card>
           <CardContent className="pt-5 pb-4 flex items-center gap-3">
-            <ClipboardList className="h-8 w-8 text-primary/60" />
+            <ClipboardList className="h-8 w-8 text-brand/70" />
             <div>
               <p className="text-2xl font-bold">—</p>
               <p className="text-xs text-muted-foreground">tests complétés</p>

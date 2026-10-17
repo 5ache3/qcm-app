@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { getServerT } from "@/lib/i18n"
-import { ClipboardList, Sparkles } from "lucide-react"
+import { ClipboardList } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ClassesSection } from "./ClassesSection"
 
@@ -80,19 +80,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-indigo-500 to-violet-500 p-6 text-white shadow-lift sm:p-8">
-        <div className="absolute -end-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-        <div className="absolute -bottom-16 end-24 h-40 w-40 rounded-full bg-fuchsia-300/20 blur-2xl" />
-        <div className="relative">
-          <p className="flex items-center gap-1.5 text-sm font-medium text-white/80">
-            <Sparkles className="h-4 w-4" />
-            QCM Revision
-          </p>
-          <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
-            {t.dashboard_greeting}{firstName ? `, ${firstName}` : ""} 👋
-          </h1>
-          <p className="mt-1 text-white/85">{t.dashboard_subtitle}</p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-semibold sm:text-4xl">
+          {t.dashboard_greeting}{firstName ? `, ${firstName}` : ""}
+        </h1>
+        <p className="mt-1.5 text-muted-foreground">{t.dashboard_subtitle}</p>
       </div>
 
       {isStudent && <ClassesSection classes={classes} />}
@@ -103,7 +95,7 @@ export default async function DashboardPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {t.stat_tests_completed}
             </CardTitle>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-soft-foreground">
               <ClipboardList className="h-4 w-4" />
             </span>
           </CardHeader>

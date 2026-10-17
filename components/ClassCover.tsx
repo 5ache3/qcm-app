@@ -1,4 +1,4 @@
-import { cn, seededGradient } from "@/lib/utils"
+import { cn, seededCoverColor } from "@/lib/utils"
 
 interface Props {
   name: string
@@ -11,7 +11,7 @@ export function ClassCover({ name, coverUrl, className, children }: Props) {
   return (
     <div
       className={cn("relative overflow-hidden bg-muted", className)}
-      style={coverUrl ? undefined : { backgroundImage: seededGradient(name) }}
+      style={coverUrl ? undefined : { backgroundColor: seededCoverColor(name) }}
     >
       {coverUrl && (
         // eslint-disable-next-line @next/next/no-img-element

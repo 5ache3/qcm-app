@@ -98,7 +98,7 @@ export default async function SubjectsPage() {
 
     return (
       <Link href={`/subjects/${subject.id}`}>
-        <Card className={`h-full cursor-pointer group transition-all hover:-translate-y-0.5 hover:shadow-lift ${isPastDue ? "opacity-60" : ""}`}>
+        <Card className={`h-full cursor-pointer group transition-all hover:shadow-lift ${isPastDue ? "opacity-60" : ""}`}>
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">

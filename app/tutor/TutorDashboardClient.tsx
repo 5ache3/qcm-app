@@ -68,7 +68,7 @@ export function TutorDashboardClient({ classes: initial, mcpTokensCard }: Props)
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-soft-foreground">
               <GraduationCap className="h-5 w-5" />
             </span>
             Mes classes
@@ -108,7 +108,7 @@ export function TutorDashboardClient({ classes: initial, mcpTokensCard }: Props)
 
       {classes.length === 0 ? (
         <div className="rounded-2xl border border-dashed bg-card/60 text-center py-16 text-muted-foreground">
-          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary-soft-foreground">
             <GraduationCap className="h-7 w-7" />
           </span>
           <p className="font-medium">Aucune classe pour l&apos;instant.</p>
@@ -117,10 +117,9 @@ export function TutorDashboardClient({ classes: initial, mcpTokensCard }: Props)
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {classes.map((cls) => (
-            <Card key={cls.id} className="group overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lift">
+            <Card key={cls.id} className="group overflow-hidden transition-all hover:shadow-lift">
               <ClassCover name={cls.name} coverUrl={cls.cover_url} className="h-32">
-                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent" />
-                <ImageUploadButton
+                                <ImageUploadButton
                   target="class-cover"
                   ownerId={cls.id}
                   currentUrl={cls.cover_url}
@@ -168,7 +167,7 @@ export function TutorDashboardClient({ classes: initial, mcpTokensCard }: Props)
 
                 <button
                   onClick={() => copyCode(cls.invite_code)}
-                  className="flex items-center gap-2 w-full rounded-xl bg-primary-soft/60 px-3 py-2 text-xs font-mono hover:bg-primary-soft transition-colors"
+                  className="flex items-center gap-2 w-full rounded-xl bg-muted px-3 py-2 text-xs font-mono hover:bg-accent transition-colors"
                 >
                   <span className="text-muted-foreground">Code :</span>
                   <span className="font-semibold tracking-widest">{cls.invite_code}</span>

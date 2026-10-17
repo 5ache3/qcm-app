@@ -20,67 +20,200 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-primary-soft: var(--primary-soft);
+  --color-brand: var(--brand);
+  --color-primary-soft: var(--highlight);
+  --color-primary-soft-foreground: var(--highlight-foreground);
   --color-sidebar: var(--sidebar);
-  --font-sans: var(--font-jakarta), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+  --color-nav-active: var(--nav-active);
+  --color-nav-active-foreground: var(--nav-active-foreground);
+  --color-mark: var(--mark);
+  --color-mark-foreground: var(--mark-foreground);
+  --font-sans: var(--font-body), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-display), var(--font-arabic), ui-serif, Georgia, serif;
   --font-mono: var(--font-geist-mono);
+  --shadow-soft: var(--card-shadow);
+  --shadow-lift: var(--card-shadow-hover);
+  --shadow-button: var(--button-shadow);
+  --shadow-nav: var(--nav-shadow);
+  --radius-2xl: var(--radius-card);
+  --radius-xl: var(--radius-control);
+  --radius-lg: var(--radius-control-sm);
 }
 
-@theme {
-  --shadow-soft: 0 1px 2px rgb(27 26 64 / 0.04), 0 6px 20px -8px rgb(27 26 64 / 0.10);
-  --shadow-lift: 0 2px 4px rgb(27 26 64 / 0.05), 0 16px 36px -12px rgb(27 26 64 / 0.18);
-}
+/* ─── Themes ────────────────────────────────────────────────────
+   Selected with <html data-theme="…"> (cookie qcm_theme). Each theme sets
+   colours, fonts, radii, border weight and shadow style; components only
+   read these tokens. */
 
-/* Theme: calm academic — indigo/violet on soft off-white.
-   Change the palette here; every component reads these tokens. */
-:root {
-  --background: #f6f6fb;
-  --foreground: #1b1a2e;
+/* A · Papier & encre — editorial, calm, serif headings, forest green */
+:root,
+[data-theme="paper"] {
+  --font-body: var(--font-inter);
+  --font-display: var(--font-fraunces);
+  --background: #faf8f3;
+  --foreground: #1c1b19;
   --card: #ffffff;
-  --card-foreground: #1b1a2e;
+  --card-foreground: #1c1b19;
   --popover: #ffffff;
-  --popover-foreground: #1b1a2e;
-  --primary: #5b52e0;
-  --primary-foreground: #ffffff;
-  --primary-soft: #eceafd;
-  --secondary: #efeef8;
-  --secondary-foreground: #33306b;
-  --muted: #f0f0f6;
-  --muted-foreground: #6a6984;
-  --accent: #eceafd;
-  --accent-foreground: #4338ca;
-  --destructive: #e5484d;
+  --popover-foreground: #1c1b19;
+  --primary: #1c1b19;
+  --primary-foreground: #faf8f3;
+  --secondary: #f1ede3;
+  --secondary-foreground: #1c1b19;
+  --muted: #f3f0e8;
+  --muted-foreground: #7a7569;
+  --accent: #f1ede3;
+  --accent-foreground: #1c1b19;
+  --destructive: #a33a2b;
   --destructive-foreground: #ffffff;
-  --border: #e5e4ef;
-  --input: #dddcea;
-  --ring: #5b52e0;
-  --sidebar: #fbfbfe;
-  --radius: 0.875rem;
+  --border: #e7e2d6;
+  --input: #ddd6c6;
+  --ring: #1f5c45;
+  --brand: #1f5c45;
+  --highlight: #e6efe9;
+  --highlight-foreground: #1f5c45;
+  --sidebar: #f4f1e9;
+  --nav-active: #ffffff;
+  --nav-active-foreground: #1c1b19;
+  --nav-shadow: inset 0 0 0 1px #e7e2d6;
+  --mark: #1c1b19;
+  --mark-foreground: #faf8f3;
+  --card-shadow: 0 1px 2px rgb(28 27 25 / 0.04);
+  --card-shadow-hover: 0 1px 2px rgb(28 27 25 / 0.05), 0 8px 24px -12px rgb(28 27 25 / 0.18);
+  --button-shadow: none;
+  --radius-card: 0.5rem;
+  --radius-control: 0.375rem;
+  --radius-control-sm: 0.375rem;
+  --border-weight: 1px;
+  --cover-1: #c9d8cc;
+  --cover-2: #e3d3bd;
+  --cover-3: #cbd3df;
+  --cover-4: #e6cfcb;
+  --cover-5: #d8d8bf;
+  --cover-6: #cfdedd;
+  --cover-foreground: #1c1b19;
+}
+
+/* C · Cahier — warm, thick outlines, flat bold colours */
+[data-theme="cahier"] {
+  --font-body: var(--font-dm-sans);
+  --font-display: var(--font-bricolage);
+  --background: #f6efe4;
+  --foreground: #2b2118;
+  --card: #fffaf2;
+  --card-foreground: #2b2118;
+  --popover: #fffaf2;
+  --popover-foreground: #2b2118;
+  --primary: #e2572b;
+  --primary-foreground: #ffffff;
+  --secondary: #efe4d3;
+  --secondary-foreground: #2b2118;
+  --muted: #efe4d3;
+  --muted-foreground: #7d6a57;
+  --accent: #ffe9a8;
+  --accent-foreground: #2b2118;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+  --border: #2b2118;
+  --input: #2b2118;
+  --ring: #e2572b;
+  --brand: #e2572b;
+  --highlight: #ffd66b;
+  --highlight-foreground: #2b2118;
+  --sidebar: #f6efe4;
+  --nav-active: #ffd66b;
+  --nav-active-foreground: #2b2118;
+  --nav-shadow: inset 0 0 0 2px #2b2118;
+  --mark: #e2572b;
+  --mark-foreground: #ffffff;
+  --card-shadow: 4px 4px 0 #2b2118;
+  --card-shadow-hover: 6px 6px 0 #2b2118;
+  --button-shadow: 3px 3px 0 #2b2118;
+  --radius-card: 0.875rem;
+  --radius-control: 0.625rem;
+  --radius-control-sm: 0.5rem;
+  --border-weight: 2px;
+  --cover-1: #8fd1c1;
+  --cover-2: #ffd66b;
+  --cover-3: #f4a38a;
+  --cover-4: #9ec5f0;
+  --cover-5: #c9b6ea;
+  --cover-6: #c6e08a;
+  --cover-foreground: #2b2118;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0e0d18;
-    --foreground: #ecebf6;
-    --card: #161526;
-    --card-foreground: #ecebf6;
-    --popover: #161526;
-    --popover-foreground: #ecebf6;
-    --primary: #8f88ff;
-    --primary-foreground: #12111f;
-    --primary-soft: #252248;
-    --secondary: #221f38;
-    --secondary-foreground: #d9d7f7;
-    --muted: #1d1b30;
-    --muted-foreground: #9c9ab8;
-    --accent: #252248;
-    --accent-foreground: #c4c0ff;
-    --destructive: #f2555a;
-    --destructive-foreground: #ffffff;
-    --border: #2a2842;
-    --input: #322f4d;
-    --ring: #8f88ff;
-    --sidebar: #12111f;
+  :root,
+  [data-theme="paper"] {
+    --background: #151412;
+    --foreground: #ece8df;
+    --card: #1d1c19;
+    --card-foreground: #ece8df;
+    --popover: #1d1c19;
+    --popover-foreground: #ece8df;
+    --primary: #ece8df;
+    --primary-foreground: #151412;
+    --secondary: #26241f;
+    --secondary-foreground: #ece8df;
+    --muted: #23211d;
+    --muted-foreground: #a39d90;
+    --accent: #26241f;
+    --accent-foreground: #ece8df;
+    --destructive: #e0715f;
+    --border: #2f2c26;
+    --input: #3a362f;
+    --ring: #6fbf98;
+    --brand: #6fbf98;
+    --highlight: #213229;
+    --highlight-foreground: #9fd6b8;
+    --sidebar: #191815;
+    --nav-active: #23211d;
+    --nav-active-foreground: #ece8df;
+    --nav-shadow: inset 0 0 0 1px #2f2c26;
+    --mark: #ece8df;
+    --mark-foreground: #151412;
+    --card-shadow: none;
+    --card-shadow-hover: 0 8px 24px -12px rgb(0 0 0 / 0.6);
+    --cover-1: #34463b;
+    --cover-2: #4a3f30;
+    --cover-3: #353d4a;
+    --cover-4: #4a3634;
+    --cover-5: #3f3f2e;
+    --cover-6: #2f4544;
+    --cover-foreground: #ece8df;
+  }
+
+  [data-theme="cahier"] {
+    --background: #1f1913;
+    --foreground: #f6efe4;
+    --card: #2a221a;
+    --card-foreground: #f6efe4;
+    --popover: #2a221a;
+    --popover-foreground: #f6efe4;
+    --primary: #ff6a3d;
+    --primary-foreground: #1f1913;
+    --secondary: #342a20;
+    --secondary-foreground: #f6efe4;
+    --muted: #342a20;
+    --muted-foreground: #c2b29d;
+    --accent: #4a3c22;
+    --accent-foreground: #f6efe4;
+    --destructive: #ff6b5e;
+    --border: #e9dcc7;
+    --input: #e9dcc7;
+    --ring: #ff6a3d;
+    --brand: #ff8a63;
+    --highlight: #ffd66b;
+    --highlight-foreground: #1f1913;
+    --sidebar: #1f1913;
+    --nav-active: #ffd66b;
+    --nav-active-foreground: #1f1913;
+    --nav-shadow: inset 0 0 0 2px #e9dcc7;
+    --mark: #ff6a3d;
+    --mark-foreground: #1f1913;
+    --card-shadow: 4px 4px 0 #0d0a07;
+    --card-shadow-hover: 6px 6px 0 #0d0a07;
+    --button-shadow: 3px 3px 0 #0d0a07;
   }
 }
 
@@ -89,8 +222,17 @@
 }
 
 h1, h2, h3 {
-  letter-spacing: -0.02em;
+  /* Read the theme's display font directly so it follows data-theme on any ancestor */
+  font-family: var(--font-display), var(--font-arabic), ui-serif, Georgia, serif;
+  letter-spacing: -0.015em;
 }
+
+/* Cahier draws every outline thicker */
+[data-theme="cahier"] .border { border-width: var(--border-weight); }
+[data-theme="cahier"] .border-t { border-top-width: var(--border-weight); }
+[data-theme="cahier"] .border-b { border-bottom-width: var(--border-weight); }
+[data-theme="cahier"] .border-e { border-inline-end-width: var(--border-weight); }
+[data-theme="cahier"] .border-s { border-inline-start-width: var(--border-weight); }
 
 body {
   background: var(--background);

@@ -1,15 +1,19 @@
 import type { Metadata } from "next"
-import { Plus_Jakarta_Sans, IBM_Plex_Sans_Arabic, Geist_Mono } from "next/font/google"
+import { Inter, Fraunces, DM_Sans, Bricolage_Grotesque, IBM_Plex_Sans_Arabic, Geist_Mono } from "next/font/google"
 import { Toaster } from "sonner"
 import { cookies } from "next/headers"
 import { getLang, translations } from "@/lib/i18n"
 import { LanguageProvider } from "@/lib/i18n-client"
+import { getTheme, THEME_COOKIE } from "@/lib/theme"
 import "./globals.css"
 
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-})
+// Papier theme
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] })
+const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"] })
+
+// Cahier theme
+const dmSans = DM_Sans({ variable: "--font-dm-sans", subsets: ["latin"] })
+const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"] })
 
 const plexArabic = IBM_Plex_Sans_Arabic({
   variable: "--font-arabic",
@@ -35,9 +39,11 @@ export default async function RootLayout({
   const cookieStore = await cookies()
   const lang = getLang(cookieStore.get("qcm_lang")?.value)
   const t = translations[lang]
+  const theme = getTheme(cookieStore.get(THEME_COOKIE)?.value)
 
   return (
-    <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} className={`${jakarta.variable} ${plexArabic.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} data-theme={theme}
+      className={`${inter.variable} ${fraunces.variable} ${dmSans.variable} ${bricolage.variable} ${plexArabic.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full bg-background text-foreground">
         <LanguageProvider t={t} lang={lang}>
           {children}

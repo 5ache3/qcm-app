@@ -132,7 +132,7 @@ export function SubjectsClassClient({ classId, subjects: initial, questionCountM
 
       {subjects.length === 0 ? (
         <div className="rounded-2xl border border-dashed bg-card/60 text-center py-14 text-muted-foreground">
-          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary-soft-foreground">
             <BookMarked className="h-7 w-7" />
           </span>
           <p>Aucune matière. Créez-en une pour commencer.</p>
@@ -142,7 +142,7 @@ export function SubjectsClassClient({ classId, subjects: initial, questionCountM
           {subjects.map((subject) => {
             const isEditing = editingId === subject.id
             return (
-              <div key={subject.id} className="rounded-2xl border border-border/70 bg-card p-5 space-y-4 shadow-soft transition-shadow hover:shadow-lift">
+              <div key={subject.id} className="rounded-2xl border bg-card p-5 space-y-4 shadow-soft transition-shadow hover:shadow-lift">
                 {isEditing ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-[auto_1fr] gap-3 items-start">
@@ -214,7 +214,7 @@ export function SubjectsClassClient({ classId, subjects: initial, questionCountM
                               📅 {new Date(subject.due_date + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
                             </p>
                           )}
-                          <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">{questionCountMap[subject.id] ?? 0} question{(questionCountMap[subject.id] ?? 0) !== 1 ? "s" : ""}</span>
+                          <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary-soft-foreground">{questionCountMap[subject.id] ?? 0} question{(questionCountMap[subject.id] ?? 0) !== 1 ? "s" : ""}</span>
                         </div>
                       </div>
                     </div>
