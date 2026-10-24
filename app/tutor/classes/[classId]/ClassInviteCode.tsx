@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
-import { Copy, RefreshCw } from "lucide-react"
+import { Copy, Link2, RefreshCw } from "lucide-react"
 import { rotateInviteCode } from "./actions"
 
 interface Props {
@@ -17,6 +17,11 @@ export function ClassInviteCode({ classId, code: initialCode }: Props) {
   function handleCopy() {
     navigator.clipboard.writeText(code)
     toast.success("Code copié !")
+  }
+
+  function handleCopyLink() {
+    navigator.clipboard.writeText(`${window.location.origin}/join/${code}`)
+    toast.success("Lien d'invitation copié !")
   }
 
   function handleRotate() {
@@ -39,6 +44,13 @@ export function ClassInviteCode({ classId, code: initialCode }: Props) {
           <p className="font-mono font-bold tracking-widest text-lg">{code}</p>
         </div>
         <Copy className="h-4 w-4 text-muted-foreground shrink-0" />
+      </button>
+      <button
+        onClick={handleCopyLink}
+        title="Copier le lien d'invitation"
+        className="rounded-lg border bg-muted px-3 hover:bg-muted/80 transition-colors"
+      >
+        <Link2 className="h-4 w-4 text-muted-foreground" />
       </button>
       <button
         onClick={handleRotate}

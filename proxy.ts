@@ -34,8 +34,8 @@ export async function proxy(request: NextRequest) {
   const publicPaths = ["/login", "/api/mistakes/typst", "/api/mcp", "/.well-known"]
   if (!user && !publicPaths.some((p) => pathname.startsWith(p))) {
     const loginUrl = new URL("/login", request.url)
-    // Return to the OAuth consent screen after signing in
-    if (pathname.startsWith("/oauth/")) loginUrl.searchParams.set("next", pathname + request.nextUrl.search)
+    // Return to the OAuth consent screen or class invite link after signing in
+    if (pathname.startsWith("/oauth/") || pathname.startsWith("/join/")) loginUrl.searchParams.set("next", pathname + request.nextUrl.search)
     return NextResponse.redirect(loginUrl)
   }
 
@@ -43,7 +43,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
-  if (user && !pathname.startsWith("/profile") && !pathname.startsWith("/api")) {
+  if (user && !pathname.startsWith("/profile") && !pathname.startsWith("/api") && !pathname.startsWith("/join/")) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("status")
