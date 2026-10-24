@@ -4,7 +4,12 @@ import { ClipboardList } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ClassesSection } from "./ClassesSection"
 
-export default async function DashboardPage() {
+interface Props {
+  searchParams: Promise<{ class?: string }>
+}
+
+export default async function DashboardPage({ searchParams }: Props) {
+  const { class: openClassId } = await searchParams
   const [supabase, { t }] = await Promise.all([createClient(), getServerT()])
   const {
     data: { user },
@@ -87,7 +92,7 @@ export default async function DashboardPage() {
         <p className="mt-1.5 text-muted-foreground">{t.dashboard_subtitle}</p>
       </div>
 
-      {isStudent && <ClassesSection classes={classes} />}
+      {isStudent && <ClassesSection classes={classes} openClassId={openClassId} />}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card>

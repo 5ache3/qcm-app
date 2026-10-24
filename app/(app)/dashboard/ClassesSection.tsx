@@ -32,11 +32,12 @@ interface ClassRow {
 
 interface Props {
   classes: ClassRow[]
+  openClassId?: string
 }
 
-export function ClassesSection({ classes: initial }: Props) {
+export function ClassesSection({ classes: initial, openClassId }: Props) {
   const [classes, setClasses] = useState(initial)
-  const [selectedClassId, setSelectedClassId] = useState<string | null>(null)
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(openClassId ?? null)
   const [code, setCode] = useState("")
   const [showJoin, setShowJoin] = useState(false)
   const [isPending, startTransition] = useTransition()

@@ -35,8 +35,10 @@ export default async function JoinClassPage({ params }: Props) {
         .maybeSingle()
     : { data: null }
 
+  if (cls && cls.tutor_id === user.id) redirect(`/tutor/classes/${cls.id}`)
+  if (cls && membership?.status === "approved") redirect(`/dashboard?class=${cls.id}`)
+
   const tutor = cls?.profiles as { full_name: string | null } | null | undefined
-  const isOwnClass = cls?.tutor_id === user.id
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -54,16 +56,7 @@ export default async function JoinClassPage({ params }: Props) {
                 {cls.description && <p className="text-sm pt-1">{cls.description}</p>}
               </div>
 
-              {isOwnClass ? (
-                <p className="text-sm text-muted-foreground">C&apos;est votre classe. Partagez ce lien avec vos étudiants.</p>
-              ) : membership?.status === "approved" ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">Vous êtes déjà membre de cette classe.</p>
-                  <Button asChild className="w-full"><Link href="/dashboard">Aller au tableau de bord</Link></Button>
-                </div>
-              ) : (
-                <JoinClassButton code={code} alreadyPending={membership?.status === "pending"} />
-              )}
+              <JoinClassButton code={code} alreadyPending={membership?.status === "pending"} />
             </CardContent>
           </>
         ) : (
