@@ -1,7 +1,8 @@
+import { headers } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { GraduationCap, Users, BookMarked, ClipboardList, ArrowLeft } from "lucide-react"
+import { Users, BookMarked, ClipboardList, ArrowLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -9,6 +10,7 @@ import { ClassInviteCode } from "./ClassInviteCode"
 import { ClassHeaderEdit } from "./ClassHeaderEdit"
 import { ClassCover } from "@/components/ClassCover"
 import { ImageUploadButton } from "@/components/ImageUploadButton"
+import { SubjectLogo } from "@/components/SubjectLogo"
 
 interface Props {
   params: Promise<{ classId: string }>
@@ -28,19 +30,35 @@ export default async function ClassOverviewPage({ params }: Props) {
 
   if (!cls) notFound()
 
-  const [{ data: memberships }, { data: subjects }] = await Promise.all([
+  const [{ data: membershipsRaw }, { data: subjectsRaw }, headerList] = await Promise.all([
     supabase
       .from("class_memberships")
-      .select("status")
-      .eq("class_id", classId),
+      .select("student_id, status, profiles(full_name)")
+      .eq("class_id", classId)
+      .order("joined_at", { ascending: false }),
     supabase
       .from("subjects")
-      .select("id")
-      .eq("class_id", classId),
+      .select("id, name, icon, logo_url, questions(id)")
+      .eq("class_id", classId)
+      .order("name"),
+    headers(),
   ])
 
-  const approved = (memberships ?? []).filter((m) => m.status === "approved").length
-  const pending = (memberships ?? []).filter((m) => m.status === "pending").length
+  const host = headerList.get("host")
+  const protocol = headerList.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https")
+
+  const students = (membershipsRaw ?? []).map((m) => ({
+    studentId: m.student_id,
+    fullName: (m.profiles as unknown as { full_name: string | null } | null)?.full_name ?? "Sans nom",
+    status: m.status as "pending" | "approved",
+  }))
+  const subjects = (subjectsRaw ?? []).map((s) => ({
+    ...s,
+    questionCount: (s.questions as { id: string }[] | null)?.length ?? 0,
+  }))
+
+  const approved = students.filter((m) => m.status === "approved").length
+  const pending = students.filter((m) => m.status === "pending").length
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
@@ -59,64 +77,94 @@ export default async function ClassOverviewPage({ params }: Props) {
         />
       </div>
 
-      <ClassInviteCode classId={classId} code={cls.invite_code} />
+      <ClassInviteCode classId={classId} code={cls.invite_code} baseUrl={`${protocol}://${host}`} />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardContent className="pt-5 pb-4 flex items-center gap-3">
-            <Users className="h-8 w-8 text-brand/70" />
-            <div>
-              <p className="text-2xl font-bold">{approved}</p>
-              <p className="text-xs text-muted-foreground">
-                étudiant{approved !== 1 ? "s" : ""} approuvé{approved !== 1 ? "s" : ""}
-                {pending > 0 && (
-                  <> · <span className="text-amber-600">{pending} en attente</span></>
-                )}
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BookMarked className="h-4 w-4" />
+                Matières
+                <span className="text-sm font-normal text-muted-foreground">({subjects.length})</span>
+              </CardTitle>
+              <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+                <Link href={`/tutor/classes/${classId}/subjects`}>Gérer</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {subjects.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">Aucune matière pour l&apos;instant.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {subjects.map((s) => (
+                  <Link
+                    key={s.id}
+                    href={`/tutor/classes/${classId}/subjects`}
+                    className="flex items-center gap-3 rounded-xl border px-3 py-2 hover:bg-muted/60 transition-colors"
+                  >
+                    <SubjectLogo name={s.name} logoUrl={s.logo_url} icon={s.icon} className="h-8 w-8 text-base" />
+                    <p className="flex-1 min-w-0 text-sm font-medium truncate">{s.name}</p>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {s.questionCount} question{s.questionCount !== 1 ? "s" : ""}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Étudiants
+                <span className="text-sm font-normal text-muted-foreground">({approved})</span>
+                {pending > 0 && <Badge variant="warning" className="text-xs">{pending} en attente</Badge>}
+              </CardTitle>
+              <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+                <Link href={`/tutor/classes/${classId}/students`}>Gérer</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {students.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                Aucun étudiant. Partagez le lien d&apos;invitation pour en ajouter.
               </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 pb-4 flex items-center gap-3">
-            <BookMarked className="h-8 w-8 text-brand/70" />
-            <div>
-              <p className="text-2xl font-bold">{subjects?.length ?? 0}</p>
-              <p className="text-xs text-muted-foreground">matière{(subjects?.length ?? 0) !== 1 ? "s" : ""}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 pb-4 flex items-center gap-3">
-            <ClipboardList className="h-8 w-8 text-brand/70" />
-            <div>
-              <p className="text-2xl font-bold">—</p>
-              <p className="text-xs text-muted-foreground">tests complétés</p>
-            </div>
+            ) : (
+              <div className="space-y-1.5">
+                {students.map((s) => (
+                  <Link
+                    key={s.studentId}
+                    href={s.status === "approved"
+                      ? `/tutor/classes/${classId}/students/${s.studentId}`
+                      : `/tutor/classes/${classId}/students`}
+                    className="flex items-center gap-3 rounded-xl border px-3 py-2 hover:bg-muted/60 transition-colors"
+                  >
+                    <p className="flex-1 min-w-0 text-sm font-medium truncate">{s.fullName}</p>
+                    {s.status === "pending" ? (
+                      <Badge variant="warning" className="text-xs">En attente</Badge>
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 rtl:rotate-180" />
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Button variant="outline" className="h-16 flex-col gap-1" asChild>
-          <Link href={`/tutor/classes/${classId}/students`}>
-            <Users className="h-5 w-5" />
-            <span className="text-sm">Étudiants</span>
-            {pending > 0 && <Badge variant="warning" className="text-xs">{pending} en attente</Badge>}
-          </Link>
-        </Button>
-        <Button variant="outline" className="h-16 flex-col gap-1" asChild>
-          <Link href={`/tutor/classes/${classId}/subjects`}>
-            <BookMarked className="h-5 w-5" />
-            <span className="text-sm">Matières</span>
-          </Link>
-        </Button>
-        <Button variant="outline" className="h-16 flex-col gap-1" asChild>
-          <Link href={`/tutor/classes/${classId}/questions`}>
-            <ClipboardList className="h-5 w-5" />
-            <span className="text-sm">Questions</span>
-          </Link>
-        </Button>
-      </div>
+      <Button variant="outline" className="w-full sm:w-auto" asChild>
+        <Link href={`/tutor/classes/${classId}/questions`}>
+          <ClipboardList className="h-4 w-4 me-1.5" />
+          Questions
+        </Link>
+      </Button>
     </div>
   )
 }
